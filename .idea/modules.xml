@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SNES-Emulator.iml" filepath="$PROJECT_DIR$/SNES-Emulator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SNES-Disassembler.iml" filepath="$PROJECT_DIR$/SNES-Disassembler.iml" />
     </modules>
   </component>
 </project>
