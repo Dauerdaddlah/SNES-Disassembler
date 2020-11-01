@@ -1,8 +1,15 @@
-package de.dde.snes.da
+package de.dde.snes.da.rom
+
+import de.dde.snes.da.*
+import de.dde.snes.da.processor.*
+
+val allMappingModes: List<MappingMode>
+    get() = listOf(LoROM, HiROM, ExLoROM, ExHiROM)
 
 sealed class MappingMode(
     val headerStart: Int,
-    val mode: Int
+    val mode: Int,
+    val name: String
 ) {
     fun readHeader(rom: ByteArray): RomHeader {
         val headerVersion = when {
@@ -65,45 +72,45 @@ sealed class MappingMode(
 
         val opcode = rom[(headerStart and 0x7fff.inv()) or (resetVector and 0x7fff)]  //first instruction executed
 
-        when (Byte(opcode)) {
+        when (instruction(opcode).operation) {
             //most likely opcodes
-            0x78,  //sei
-            0x18,  //clc (clc; xce)
-            0x38,  //sec (sec; xce)
-            0x9c,  //stz $nnnn (stz $4200)
-            0x4c,  //jmp $nnnn
-            0x5c  //jml $nnnnnn
+            SEI,  //sei
+            CLC,  //clc (clc; xce)
+            SEC,  //sec (sec; xce)
+            STZ,  //stz $nnnn (stz $4200)
+            JMP,  //jmp $nnnn
+            JML  //jml $nnnnnn
             -> score += 8
 
             //plausible opcodes
-            0xc2,  //rep #$nn
-            0xe2,  //sep #$nn
-            0xad,  //lda $nnnn
-            0xae,  //ldx $nnnn
-            0xac,  //ldy $nnnn
-            0xaf,  //lda $nnnnnn
-            0xa9,  //lda #$nn
-            0xa2,  //ldx #$nn
-            0xa0,  //ldy #$nn
-            0x20,  //jsr $nnnn
-            0x22  //jsl $nnnnnn
+            REP,  //rep #$nn
+            SEP,  //sep #$nn
+            LDA,  //lda $nnnn
+            LDX,  //ldx $nnnn
+            LDY,  //ldy $nnnn
+            LDA,  //lda $nnnnnn
+            //0xa9,  //lda #$nn
+            //0xa2,  //ldx #$nn
+            //0xa0,  //ldy #$nn
+            JSR,  //jsr $nnnn
+            JSL  //jsl $nnnnnn
             -> score += 4
 
             //implausible opcodes
-            0x40,  //rti
-            0x60,  //rts
-            0x6b,  //rtl
-            0xcd,  //cmp $nnnn
-            0xec,  //cpx $nnnn
-            0xcc  //cpy $nnnn
+            RTI,  //rti
+            RTS,  //rts
+            RTL,  //rtl
+            CMP,  //cmp $nnnn
+            CPX,  //cpx $nnnn
+            CPY  //cpy $nnnn
             -> score -= 4
 
             //least likely opcodes
-            0x00,  //brk #$nn
-            0x02,  //cop #$nn
-            0xdb,  //stp
-            0x42,  //wdm
-            0xff  //sbc $nnnnnn,x
+            BRK,  //brk #$nn
+            COP,  //cop #$nn
+            STP,  //stp
+            WDM,  //wdm
+            SBC  //sbc $nnnnnn,x
             -> score -= 8
         }
 
@@ -114,11 +121,9 @@ sealed class MappingMode(
         return score
     }
 
-    open fun getByte(snes: SNES, address: Int): Int {
-        return getByte(snes, address.longByte(), address.asShort())
-    }
+    open fun getMemoryAddress(address: Int) = getMemoryAddress(address.longByte(), address.asShort())
 
-    abstract fun getByte(snes: SNES, bank: Int, address: Int): Int
+    abstract fun getMemoryAddress(bank: Int, address: Int): MemoryAddress
 
     fun annotateRom(rom: ROM) {
         val header = readHeader(rom.bytes)
@@ -240,38 +245,59 @@ sealed class MappingMode(
     }
 }
 
-object LoROM : MappingMode(0x7FB0, 0x20) {
-    override fun getByte(snes: SNES, bank: Int, address: Int): Int {
+object LoROM : MappingMode(0x7FB0, 0x20, "LoROM") {
+
+    override fun getMemoryAddress(bank: Int, address: Int): MemoryAddress {
         return when {
             // right half
-            bank < 0x7E -> getByte(snes, bank or 0x80, address) // mirror of left half
-            bank < 0x80 -> 0x00 // WRAM
+            bank < 0x7E -> getMemoryAddress(bank or 0x80, address) // mirror of left half
+            bank < 0x80 -> MemoryAddress(MemoryArea.WRAM, (bank - 0x7E) * _1BANK + address) // WRAM
 
             // left lower quarter
             address < 0x8000 -> when {
-                bank < 0xC0 -> 0x00 // Hardware addresses
-                bank >= 0x70 -> 0x00 // SRAM
-                else -> getByte(snes, bank, address or 0x8000) // mirror of top half
+                bank < 0xC0 -> {
+                    if (address < 0x2000) MemoryAddress(MemoryArea.WRAM, address)
+                    else MemoryAddress(MemoryArea.HARDWARE_REGISTER, address)
+                } // Hardware addresses
+                bank >= 0x70 -> {
+                    MemoryAddress(MemoryArea.SRAM, (bank - 0xF0) * HALF_BANK + address)
+                } // SRAM
+                else -> getMemoryAddress(bank, address or 0x8000) // mirror of top half
             }
 
-            // left upper wuarter -> rom
+            // left upper quarter -> rom
             else -> {
                 val index = (bank and 0x7F) * 0x8000 + (address and 0x7FFF)
 
-                index
+                MemoryAddress(MemoryArea.ROM, index)
             }
         }
     }
 }
 
-object HiROM : MappingMode(0xFFB0, 0x21) {
-    override fun getByte(snes: SNES, bank: Int, address: Int): Int {
-        TODO("Not yet implemented")
+object HiROM : MappingMode(0xFFB0, 0x21, "HiROM") {
+    override fun getMemoryAddress(bank: Int, address: Int): MemoryAddress {
+        return when {
+            // right half
+            bank < 0x7E -> getMemoryAddress(bank or 0x80, address) // mirror of left half
+            bank < 0x80 -> MemoryAddress(MemoryArea.WRAM, ((bank - 0x7E) * _1BANK) + address) // WRAM
+
+            // left half -> right half
+            bank < 0xC0 -> when {
+                address < 0x2000 -> MemoryAddress(MemoryArea.WRAM, address)
+                address < 0x6000 -> MemoryAddress(MemoryArea.HARDWARE_REGISTER, address)
+                address < 0x8000 -> MemoryAddress(MemoryArea.SRAM, ((bank and 0xF) * 0x2000) + (address - 0x6000))
+                else -> getMemoryAddress(bank + 0x40, address) // mirror of rom
+            }
+
+            // left half -> left half
+            else -> MemoryAddress(MemoryArea.ROM, ((bank - 0xC0) * _1BANK) + address)
+        }
     }
 }
 
-object ExLoROM : MappingMode(0x407fb0, 0x32) {
-    override fun getByte(snes: SNES, bank: Int, address: Int): Int {
+object ExLoROM : MappingMode(0x407fb0, 0x32, "ExLoROM") {
+    override fun getMemoryAddress(bank: Int, address: Int): MemoryAddress {
         TODO("Not yet implemented")
     }
 
@@ -286,8 +312,8 @@ object ExLoROM : MappingMode(0x407fb0, 0x32) {
     }
 }
 
-object ExHiROM : MappingMode(0x40ffb0, 0x35) {
-    override fun getByte(snes: SNES, bank: Int, address: Int): Int {
+object ExHiROM : MappingMode(0x40ffb0, 0x35, "ExHiROM") {
+    override fun getMemoryAddress(bank: Int, address: Int): MemoryAddress {
         TODO("Not yet implemented")
     }
 
@@ -303,24 +329,24 @@ object ExHiROM : MappingMode(0x40ffb0, 0x35) {
 }
 
 data class RomHeader(
-    val headerVersion: Int,
-    val romName: String,
-    val mappingMode: Byte,
-    val cartridgeType: Byte,
-    val romSize: Byte,
-    val ramSize: Byte,
-    val region: Byte,
-    val devId: Any,
-    val romVersion: Byte,
-    val complement: Int,
-    val checksum: Int,
-    val coCpuType: Byte,
-    val gameCode: String,
-    val flash: Byte,
-    val exRamSize: Byte,
-    val specialVersion: Byte,
-    val emulationVectors: Vectors,
-    val nativeVectors: Vectors
+        val headerVersion: Int,
+        val romName: String,
+        val mappingMode: Byte,
+        val cartridgeType: Byte,
+        val romSize: Byte,
+        val ramSize: Byte,
+        val region: Byte,
+        val devId: Any,
+        val romVersion: Byte,
+        val complement: Int,
+        val checksum: Int,
+        val coCpuType: Byte,
+        val gameCode: String,
+        val flash: Byte,
+        val exRamSize: Byte,
+        val specialVersion: Byte,
+        val emulationVectors: Vectors,
+        val nativeVectors: Vectors
 )
 
 data class Vectors(
@@ -330,4 +356,16 @@ data class Vectors(
     val nmi: Int,
     val reset: Int,
     val irq: Int
+)
+
+enum class MemoryArea {
+    HARDWARE_REGISTER,
+    WRAM,
+    SRAM,
+    ROM
+}
+
+data class MemoryAddress(
+        val area: MemoryArea,
+        val index: Int
 )

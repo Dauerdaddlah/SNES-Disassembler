@@ -1,15 +1,19 @@
-package de.dde.snes.da
+package de.dde.snes.da.rom
 
 class ROM(
-    val bytesAll: ByteArray
+        val romFile: ROMFile,
+        val mappingMode: MappingMode = romFile.mappingMode?: throw IllegalArgumentException("only valid RomFiles can be used for a ROM")
 ) {
-    val bytes: ByteArray = when (bytesAll.size.rem(0x400)) {
-        0 -> bytesAll
-        0x200 -> bytesAll.copyOfRange(0x200, bytesAll.size)
-        else -> error("malformed ROM")
-    }
+    val header = if (mappingMode == romFile.mappingMode) romFile.snesHeader else mappingMode.readHeader(romFile.bytes)
+
+    val bytes: ByteArray
+        get() = romFile.bytes
 
     val byteMeanings = Array<Meaning?>(bytes.size) { null }
+
+    init {
+        if (!romFile.valid) throw IllegalArgumentException("only valid RomFiles can be used for a ROM")
+    }
 
 }
 

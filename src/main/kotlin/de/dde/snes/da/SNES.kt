@@ -1,5 +1,6 @@
 package de.dde.snes.da
 
+import de.dde.snes.da.rom.*
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.math.pow
@@ -17,7 +18,7 @@ class SNES {
     fun loadROM(file: Path) {
         val bytes = Files.readAllBytes(file)
 
-        rom = ROM(bytes)
+        //rom = ROM(bytes)
 
         setMappingMode(checkMappingMode(rom))
     }

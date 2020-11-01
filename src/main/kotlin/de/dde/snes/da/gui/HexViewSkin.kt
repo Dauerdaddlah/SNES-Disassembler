@@ -1,18 +1,24 @@
 package de.dde.snes.da.gui
 
-import javafx.event.Event
-import javafx.event.EventDispatchChain
+import com.sun.javafx.scene.control.behavior.BehaviorBase
+import de.dde.snes.da.Byte
+import de.dde.snes.da.toAscii
 import javafx.event.EventDispatcher
+import javafx.event.EventHandler
 import javafx.geometry.HPos
 import javafx.geometry.Orientation
 import javafx.geometry.VPos
 import javafx.scene.control.Label
 import javafx.scene.control.ScrollBar
 import javafx.scene.control.SkinBase
+import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyEvent
+import javafx.scene.input.MouseEvent
 import javafx.scene.input.ScrollEvent
 import javafx.scene.text.Font
 import java.io.File
 import java.io.RandomAccessFile
+import kotlin.math.abs
 
 class HexViewSkin(
     view: HexView
@@ -53,15 +59,48 @@ class HexViewSkin(
 
                 scrollVertical.value = 0.0
                 scrollVertical.min = 0.0
-                scrollVertical.max = (fileData?.rows?: 1) - 1.0
+                scrollVertical.max = (fileData?.rows ?: 1) - 1.0
             }
 
             skinnable.requestLayout()
         }
 
-        // further all unprocessed events to the scrollbar to enable its default-handling
-        val old = view.eventDispatcher
-        view.eventDispatcher = EventDispatcher { event, tail -> old.dispatchEvent(event, tail?.append(scrollVertical.eventDispatcher)) }
+        addBehavior()
+    }
+
+    private fun addBehavior() {
+        skinnable.addEventHandler(MouseEvent.MOUSE_PRESSED) {
+            skinnable.requestFocus()
+        }
+
+        skinnable.addEventHandler(ScrollEvent.SCROLL) { e ->
+            skinnable.requestFocus()
+
+            if (e.deltaY < 0) {
+                repeat (abs(e.deltaY).toInt()) { scrollVertical.increment() }
+            } else {
+                repeat (e.deltaY.toInt()) { scrollVertical.decrement() }
+            }
+
+            e.consume()
+        }
+
+        val keys = mutableMapOf<KeyCode, () -> Unit>()
+
+        keys[KeyCode.UP] = { scrollVertical.decrement() }
+        keys[KeyCode.DOWN] = { scrollVertical.increment() }
+        keys[KeyCode.HOME] = { scrollVertical.value = scrollVertical.min }
+        keys[KeyCode.END] = { scrollVertical.value = scrollVertical.max }
+        keys[KeyCode.PAGE_UP] = { scrollVertical.value = maxOf(scrollVertical.min, scrollVertical.value - scrollVertical.blockIncrement) }
+        keys[KeyCode.PAGE_DOWN] = { scrollVertical.value = minOf(scrollVertical.max, scrollVertical.value + scrollVertical.blockIncrement) }
+
+
+        skinnable.addEventHandler(KeyEvent.KEY_PRESSED) { e ->
+            keys[e.code]?.let {
+                it()
+                e.consume()
+            }
+        }
     }
 
     override fun computeMinWidth(height: Double, topInset: Double, rightInset: Double, bottomInset: Double, leftInset: Double): Double {
@@ -118,7 +157,7 @@ class HexViewSkin(
             for (j in row.labels.indices) {
                 val b = data.buffer[i * 16 + j]
                 row.labels[j].text = "%02X".format(b)
-                s.append(ascii[b.toInt() and 0xFF])
+                s.append(b.toAscii())
             }
 
             row.labelDecode.text = s.toString()
@@ -127,7 +166,6 @@ class HexViewSkin(
         return rowsShown
     }
 
-    var m = 0
     private fun layout(contentX: Double, contentY: Double, contentWidth: Double, contentHeight: Double, rowsShown: Long) {
         scrollVertical.visibleAmount = rowsShown.toDouble()
         scrollVertical.isVisible = rowsShown < (fileData?.rows?: 0)

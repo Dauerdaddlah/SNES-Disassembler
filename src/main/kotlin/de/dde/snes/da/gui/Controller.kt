@@ -1,25 +1,41 @@
 package de.dde.snes.da.gui
 
+import de.dde.snes.da.rom.ROMFile
+import javafx.beans.property.ObjectProperty
+import javafx.beans.property.SimpleObjectProperty
 import javafx.fxml.FXML
-import javafx.scene.layout.AnchorPane
+import javafx.fxml.Initializable
+import javafx.scene.control.Label
+import javafx.scene.control.Tab
 import javafx.scene.layout.BorderPane
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import java.io.File
+import java.net.URL
 import java.nio.file.Paths
+import java.util.*
 import kotlin.system.exitProcess
 
 class Controller(
     private val stage: Stage
-) {
-    @FXML
-    lateinit var root: BorderPane
-    lateinit var v: HexView
+) : Initializable {
 
     @FXML
-    private fun initialize() {
+    lateinit var root: BorderPane
+    @FXML
+    lateinit var tabRom: Tab
+
+    @FXML
+    lateinit var lblFile: Label
+
+    lateinit var v: HexView
+
+    val fileProperty: ObjectProperty<ROMFile> = SimpleObjectProperty(this, "file", null)
+    var file: ROMFile? by fileProperty
+
+    override fun initialize(location: URL?, resources: ResourceBundle?) {
         v = HexView()
-        root.center = v
+        tabRom.content = v
     }
 
     @FXML
@@ -34,6 +50,16 @@ class Controller(
         chooser.initialDirectory = Paths.get(".").toFile()
         val file: File? = chooser.showOpenDialog(stage)
 
-        v.file = file
+        if (file != null) {
+            v.file = file
+
+            this.file = ROMFile(file)
+            lblFile.text = file.name ?: ""
+        }
+    }
+
+    @FXML
+    fun doOpenFileInfos() {
+        file?.let { FileInfosView(it).show() }
     }
 }

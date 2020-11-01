@@ -1,5 +1,7 @@
 package de.dde.snes.da
 
+import de.dde.snes.da.processor.Inst
+import de.dde.snes.da.processor.loadInsts
 import java.nio.file.Paths
 
 fun main() {
