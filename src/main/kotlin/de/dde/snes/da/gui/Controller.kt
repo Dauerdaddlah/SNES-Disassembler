@@ -1,5 +1,8 @@
 package de.dde.snes.da.gui
 
+import de.dde.snes.da.gui.hex.HexDataSourceFile
+import de.dde.snes.da.gui.hex.HexDataSourceFileCached
+import de.dde.snes.da.gui.hex.HexViewer
 import de.dde.snes.da.rom.ROMFile
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
@@ -28,13 +31,13 @@ class Controller(
     @FXML
     lateinit var lblFile: Label
 
-    lateinit var v: HexView
+    lateinit var v: HexViewer
 
     val fileProperty: ObjectProperty<ROMFile> = SimpleObjectProperty(this, "file", null)
     var file: ROMFile? by fileProperty
 
     override fun initialize(location: URL?, resources: ResourceBundle?) {
-        v = HexView()
+        v = HexViewer()
         tabRom.content = v
     }
 
@@ -51,7 +54,7 @@ class Controller(
         val file: File? = chooser.showOpenDialog(stage)
 
         if (file != null) {
-            v.file = file
+            v.hexData = HexDataSourceFileCached(file)
 
             this.file = ROMFile(file)
             lblFile.text = file.name ?: ""

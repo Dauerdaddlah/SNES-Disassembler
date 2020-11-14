@@ -1,10 +1,6 @@
 package de.dde.snes.da.gui
 
-import com.sun.javafx.scene.control.behavior.BehaviorBase
-import de.dde.snes.da.Byte
 import de.dde.snes.da.toAscii
-import javafx.event.EventDispatcher
-import javafx.event.EventHandler
 import javafx.geometry.HPos
 import javafx.geometry.Orientation
 import javafx.geometry.VPos
