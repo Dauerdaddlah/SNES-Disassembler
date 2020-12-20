@@ -31,59 +31,76 @@ val allAddressModes: List<AddressMode>
             BlockMove
     )
 
-sealed class AddressMode
+sealed class AddressMode {
+    abstract fun neededBytes(processor: Processor): Int
+}
+
+class AddressModeSimple(val bytesNeeded: Int) : AddressMode() {
+    override fun neededBytes(processor: Processor): Int {
+        return bytesNeeded
+    }
+}
+
 /** # */
-object ImmediateAccumulator : AddressMode()
+object ImmediateAccumulator : AddressMode() {
+    override fun neededBytes(processor: Processor): Int {
+        return if (processor.a.size16.isTrue()) 2 else 1
+    }
+}
 /** # */
-object ImmediateIndex : AddressMode()
+object ImmediateIndex : AddressMode() {
+    override fun neededBytes(processor: Processor): Int {
+        return if (processor.x.size16.isTrue()) 2 else 1
+    }
+}
 /** # */
-object Immediate8 : AddressMode()
+val Immediate8 = AddressModeSimple(1)
 /** i */
-object Implied : AddressMode()
+val Implied = AddressModeSimple(0)
 /** r */
-object ProgramCounterRelative : AddressMode()
+val ProgramCounterRelative = AddressModeSimple(1)
 /** rl */
-object ProgramCounterRelativeLong : AddressMode()
+val ProgramCounterRelativeLong = AddressModeSimple(2)
 /** d */
-object Direct : AddressMode()
+val Direct = AddressModeSimple(1)
 /** d,x */
-object DirectIndexedX : AddressMode()
+val DirectIndexedX = AddressModeSimple(1)
 /** d,y */
-object DirectIndexedY : AddressMode()
+val DirectIndexedY = AddressModeSimple(1)
 /** (d) - several, like ORA, AND, CMP, ... */
-object DirectIndirect : AddressMode()
+val DirectIndirect = AddressModeSimple(1)
 /** (d,x) - several, like ORA, AND, CMP, ... */
-object DirectIndexedXIndirect : AddressMode()
+val DirectIndexedXIndirect = AddressModeSimple(1)
 /** (d),y - several, like ORA, AND, CMP, ... */
-object DirectIndirectIndexedY : AddressMode()
+val DirectIndirectIndexedY = AddressModeSimple(1)
 /** [d] - several, like ORA, AND, CMP, ... */
-object DirectIndirectLong : AddressMode()
+val DirectIndirectLong = AddressModeSimple(1)
 /** [d],y - several, like ORA, AND, CMP, ... */
-object DirectIndirectIndexedYLong : AddressMode()
+val DirectIndirectIndexedYLong = AddressModeSimple(1)
 /** a */
-object Absolute : AddressMode()
+val Absolute = AddressModeSimple(2)
 /** a,x */
-object AbsoluteIndexedX : AddressMode()
+val AbsoluteIndexedX = AddressModeSimple(2)
 /** a,y */
-object AbsoluteIndexedY : AddressMode()
+val AbsoluteIndexedY = AddressModeSimple(2)
 /** al */
-object AbsoluteLong : AddressMode()
+val AbsoluteLong = AddressModeSimple(3)
 /** al,x */
-object AbsoluteIndexedLong : AddressMode()
+val AbsoluteIndexedLong = AddressModeSimple(3)
 /** s */
-object Stack : AddressMode()
+val Stack = AddressModeSimple(0)
 /** d,s */
-object StackRelative : AddressMode()
+val StackRelative = AddressModeSimple(1)
 /** (d,s),y - several, like ORA, AND, CMP, ... */
-object StackRelativeIndirectIndexedY : AddressMode()
+val StackRelativeIndirectIndexedY = AddressModeSimple(1)
 /** (a) - JMP */
-object AbsoluteIndirect : AddressMode()
+val AbsoluteIndirect = AddressModeSimple(2)
 /** [al] - JML */
-object AbsoluteIndirectLong : AddressMode()
+val AbsoluteIndirectLong = AddressModeSimple(3)
 /** (a,x) - JMP, JSR */
-object AbsoluteIndexedIndirect : AddressMode()
+val AbsoluteIndexedIndirect = AddressModeSimple(2)
 /** A */
-object Accumulator : AddressMode()
+val Accumulator = AddressModeSimple(0)
 /** xyc */
-object BlockMove : AddressMode()
+val BlockMove = AddressModeSimple(2)
 

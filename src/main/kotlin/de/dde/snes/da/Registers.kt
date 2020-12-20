@@ -1,5 +1,7 @@
 package de.dde.snes.da
 
+import de.dde.snes.da.processor.TriStateBoolean
+
 data class SnesState(
     val mode: ProcessorMode = ProcessorMode.EMULATION,
     val pc: Register = Register(),
@@ -15,7 +17,15 @@ data class SnesState(
 
 enum class ProcessorMode {
     EMULATION,
-    NATIVE
+    NATIVE,
+    UNKNOWN;
+
+    fun asBoolean() : TriStateBoolean =
+            when (this) {
+                EMULATION -> true
+                NATIVE -> false
+                UNKNOWN -> null
+            }
 }
 
 inline class Register(val r: Int = R_UNKNOWN) {

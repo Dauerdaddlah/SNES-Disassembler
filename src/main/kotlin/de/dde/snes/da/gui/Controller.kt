@@ -1,5 +1,6 @@
 package de.dde.snes.da.gui
 
+import de.dde.snes.da.SNES
 import de.dde.snes.da.gui.hex.HexDataSourceFile
 import de.dde.snes.da.gui.hex.HexDataSourceFileCached
 import de.dde.snes.da.gui.hex.HexViewer
@@ -64,5 +65,15 @@ class Controller(
     @FXML
     fun doOpenFileInfos() {
         file?.let { FileInfosView(it).show() }
+    }
+
+    @FXML
+    fun doAnalyze() {
+        val file = this.file ?: return
+
+        val snes = SNES()
+        snes.loadROM(file)
+
+        snes.analyze()
     }
 }

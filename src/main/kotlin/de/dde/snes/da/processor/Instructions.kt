@@ -9,7 +9,7 @@ fun loadInsts(): List<Inst> {
 
     val line = Files.readAllLines(file)
 
-    val insts = line.subList(1, (0xFF + 1)).map {
+    val insts = line.subList(1, (0xFF + 2)).map {
         val split = it.split('\t').map { it.trim() }
 
         val symbol = split[0].substring(0, 3)
@@ -130,6 +130,10 @@ fun main() {
 
         println("/** ${"0x%02X".format(it.opcode)} */ Instruction(${it.symbol}, $mode),")
     }
+
+    //insts.groupBy { it.addressMode }.toSortedMap().forEach { (am, codes) -> println("$am - ${codes.sortedBy { it.symbol }.joinToString { it.symbol }}") }
+    //insts.groupBy { it.symbol }.toSortedMap().forEach { (oc, modes) -> println("$oc - ${modes.sortedBy { it.addressMode }.joinToString { it.addressMode }}") }
+    insts.groupBy { it.symbol }.toSortedMap().forEach { (oc, modes) -> println("$oc - ${modes.map { it.flags }.distinct()[0]}") }
 }
 
 data class Instruction(
