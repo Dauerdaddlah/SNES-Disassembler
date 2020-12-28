@@ -1,3 +1,57 @@
 .hexview {
     -hexgap: 3
 }
+
+
+
+.address {
+    -fx-background-color: red
+}
+
+.address.zero {
+    -fx-backgroud-color: darkgrey
+}
+.address.ffff {
+    -fx-background-color: lightgrey
+}
+
+.address.txt1 {
+    -fx-background-color: green
+}
+.address.txt2 {
+    -fx-background-color: yellow
+}
+.address.txt3 {
+    -fx-background-color: blue
+}
+.address.txt4 {
+    -fx-background-color: orange
+}
+.address.txt5 {
+    -fx-background-color: purple
+}
+.address.txt6 {
+    -fx-background-color: lime
+}
+.address.txt7 {
+    -fx-background-color: lightgreen
+}
+.address.txt8 {
+    -fx-background-color: lightred
+}
+.address.txt9 {
+    -fx-background-color: pink
+}
+.address.txt10 {
+    -fx-background-color: magenta
+}
+.address.txt11 {
+    -fx-background-color: aquamarine
+}
+.address.txt12 {
+    -fx-background-color: beige
+}
+
+.tree-table-row-cell.unknown {
+    -fx-background-color: grey;
+}

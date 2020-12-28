@@ -4,7 +4,7 @@ import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.scene.control.Control
 
-import de.dde.snes.da.gui.*
+import de.dde.snes.da.util.*
 import javafx.scene.control.Skin
 
 class HexViewer : Control() {

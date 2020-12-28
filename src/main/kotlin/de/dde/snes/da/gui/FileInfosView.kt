@@ -56,8 +56,8 @@ class FileInfosView(
                         "ROM name" to it.romName,
                         "Raw Mapping Mode" to "${it.mappingMode} (0x${it.mappingMode.toString(16)})",
                         "cartridgeType" to it.cartridgeType.toString(),
-                        "romSize" to "${it.romSize} (${sizeToString(it.romSize)})",
-                        "ramSize" to "${it.ramSize} (${sizeToString(it.ramSize)})",
+                        "romSize" to "${it.romSize} (${sizeToString(it.romSize.size)})",
+                        "ramSize" to "${it.ramSize} (${sizeToString(it.ramSize.size)})",
                         "region" to "${it.region}",
                         "devId" to it.devId.toString(),
                         "ROM version" to it.romVersion.toString(),
@@ -73,7 +73,7 @@ class FileInfosView(
                     table.items.addAll(
                             "gameCode" to it.gameCode,
                             "flash memory" to "${it.flash} (${sizeToString(it.flash)})",
-                            "ex RAM size" to "${it.exRamSize} (${sizeToString(it.exRamSize)})",
+                            "ex RAM size" to "${it.exRamSize} (${sizeToString(it.exRamSize.size)})",
                             "special version" to it.specialVersion.toString()
                     )
                 }

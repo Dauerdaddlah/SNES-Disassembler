@@ -35,7 +35,7 @@ class SNES {
 
     fun loadROM(romFile: ROMFile) {
         rom = ROM(romFile)
-        sram = SRAM((2.0.pow(romFile.snesHeader?.ramSize?.toInt()?: 0) * _1K).toInt())
+        sram = SRAM((romFile.snesHeader?.ramSize?.sizeKb()?: 0) * _1K)
     }
 
     fun analyze() {

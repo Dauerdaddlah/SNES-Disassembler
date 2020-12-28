@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+
+<VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <TitledPane collapsible="false" text="ROM">
+         <content>
+            <HBox>
+               <children>
+                  <Label text="Mapping Mode" />
+                  <ComboBox fx:id="cmbMode" />
+               </children>
+            </HBox>
+         </content>
+      </TitledPane>
+      <TitledPane collapsible="false" text="Vectors">
+         <content>
+            <GridPane>
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <Label text="Emulation" GridPane.columnIndex="1" />
+                  <Label text="Native" GridPane.columnIndex="2" />
+                  <Label text="COP" GridPane.rowIndex="1" />
+                  <Label text="BRK" GridPane.rowIndex="2" />
+                  <Label text="ABORT" GridPane.rowIndex="3" />
+                  <Label text="NMI" GridPane.rowIndex="4" />
+                  <Label text="RESET" GridPane.rowIndex="5" />
+                  <Label text="IRQ" GridPane.rowIndex="6" />
+                  <TextField fx:id="txtEmuCop" editable="false" styleClass="address" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <TextField fx:id="txtNatCop" editable="false" styleClass="address" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                  <TextField fx:id="txtEmuBrk" editable="false" styleClass="address" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <TextField fx:id="txtNatBrk" editable="false" styleClass="address" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                  <TextField fx:id="txtEmuAbo" editable="false" styleClass="address" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                  <TextField fx:id="txtNatAbo" editable="false" styleClass="address" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                  <TextField fx:id="txtEmuNmi" editable="false" styleClass="address" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                  <TextField fx:id="txtNatNmi" editable="false" styleClass="address" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                  <TextField fx:id="txtEmuRes" editable="false" styleClass="address" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                  <TextField fx:id="txtNatRes" editable="false" styleClass="address" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+                  <TextField fx:id="txtEmuIrq" editable="false" styleClass="address" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                  <TextField fx:id="txtNatIrq" editable="false" styleClass="address" GridPane.columnIndex="2" GridPane.rowIndex="6" />
+               </children>
+            </GridPane>
+         </content>
+      </TitledPane>
+   </children>
+</VBox>

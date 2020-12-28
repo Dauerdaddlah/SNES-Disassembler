@@ -3,7 +3,6 @@ package de.dde.snes.da.gui.hex
 import de.dde.snes.da.toAscii
 import javafx.application.Platform
 import javafx.geometry.HPos
-import javafx.geometry.Insets
 import javafx.geometry.Orientation
 import javafx.geometry.VPos
 import javafx.scene.control.Label
@@ -199,6 +198,9 @@ class HexViewerSkin(hexViewer: HexViewer): SkinBase<HexViewer>(hexViewer) {
 
     private fun requestUpdate() {
         updated = false
+        if (rows.isEmpty()) {
+            skinnable.requestLayout()
+        }
         Platform.runLater { updateData() }
     }
 

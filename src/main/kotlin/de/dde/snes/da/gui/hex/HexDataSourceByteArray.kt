@@ -1,14 +1,17 @@
 package de.dde.snes.da.gui.hex
 
 import java.io.File
+import java.io.IOException
+import java.nio.file.Files
 
-class HexDataSourceFileCached(
-        file: File
+class HexDataSourceByteArray(
+    private val buffer: ByteArray
 ) : HexDataSource {
-
-    private val buffer = file.readBytes()
     override val size: Int
         get() = buffer.size
+
+    @Throws(IOException::class)
+    constructor(file: File) : this(Files.readAllBytes(file.toPath()))
 
     override fun ensure(index: Int, size: Int) {
     }

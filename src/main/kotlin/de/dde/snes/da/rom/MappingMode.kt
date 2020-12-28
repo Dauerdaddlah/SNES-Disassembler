@@ -20,18 +20,18 @@ sealed class MappingMode(
 
         val gameCode = if (headerVersion < 3) "" else String(rom, headerStart + 0x02, 4)
         val flash = if (headerVersion < 3) 0 else rom[headerStart + 0x0C]
-        val exRamSize = if (headerVersion < 3) 0 else rom[headerStart + 0x0D]
+        val exRamSize = SizeKB(if (headerVersion < 3) 0 else rom[headerStart + 0x0D])
         val specialVersion = if (headerVersion < 3) 0 else rom[headerStart + 0x0E]
 
         val coCpuType = if (headerVersion < 2) 0 else rom[headerStart + 0x0F]
 
         val romName = String(rom, headerStart + 0x10, if (headerVersion == 2) 0x14 else 0x15)
         val mappingMode = rom[headerStart + 0x25]
-        val cartridgeType = rom[headerStart + 0x26]
-        val romSize = rom[headerStart + 0x27]
-        val ramSize = rom[headerStart + 0x28]
-        val region = rom[headerStart + 0x29]
-        val devId = if (headerVersion < 2) rom[headerStart + 0x2A] else Word(rom[headerStart + 0x00], rom[headerStart + 0x01])
+        val cartridgeType = RomType(rom[headerStart + 0x26])
+        val romSize = SizeMB(rom[headerStart + 0x27])
+        val ramSize = SizeKB(rom[headerStart + 0x28])
+        val region = CountryCode(rom[headerStart + 0x29])
+        val devId = Licensee(if (headerVersion < 2) Byte(rom[headerStart + 0x2A]) else Word(rom[headerStart + 0x00], rom[headerStart + 0x01]))
         val romVersion = rom[headerStart + 0x2B]
         val complement = Word(rom[headerStart + 0x2C], rom[headerStart + 0x2D])
         val checksum = Word(rom[headerStart + 0x2E], rom[headerStart + 0x2F])
@@ -59,7 +59,7 @@ sealed class MappingMode(
 
     open fun score(rom: ByteArray): Int {
         // function borrowed from bsnes
-        if (rom.size < headerStart + 0x50) return 0 // not enough bytes for a valid header
+        if (rom.size < headerStart + 0x50) return Integer.MIN_VALUE // not enough bytes for a valid header
 
         var score = 0
 
@@ -120,6 +120,8 @@ sealed class MappingMode(
 
         return score
     }
+
+    abstract fun toSnesAddress(romOffset: Int): Int
 
     open fun getMemoryAddress(address: Int) = getMemoryAddress(address.longByte(), address.asShort())
 
@@ -273,6 +275,13 @@ object LoROM : MappingMode(0x7FB0, 0x20, "LoROM") {
             }
         }
     }
+
+    override fun toSnesAddress(romOffset: Int): Int {
+        val bank = romOffset shr 15
+        val addr = (romOffset and 0x7FFF) or 0x8000
+
+        return (bank shl 16) or addr
+    }
 }
 
 object HiROM : MappingMode(0xFFB0, 0x21, "HiROM") {
@@ -294,6 +303,10 @@ object HiROM : MappingMode(0xFFB0, 0x21, "HiROM") {
             else -> MemoryAddress(MemoryArea.ROM, ((bank - 0xC0) * _1BANK) + address)
         }
     }
+
+    override fun toSnesAddress(romOffset: Int): Int {
+        return romOffset or 0x300000
+    }
 }
 
 object ExLoROM : MappingMode(0x407fb0, 0x32, "ExLoROM") {
@@ -309,6 +322,10 @@ object ExLoROM : MappingMode(0x407fb0, 0x32, "ExLoROM") {
         }
 
         return score
+    }
+
+    override fun toSnesAddress(romOffset: Int): Int {
+        TODO("Not yet implemented")
     }
 }
 
@@ -326,37 +343,11 @@ object ExHiROM : MappingMode(0x40ffb0, 0x35, "ExHiROM") {
 
         return score
     }
+
+    override fun toSnesAddress(romOffset: Int): Int {
+        TODO("Not yet implemented")
+    }
 }
-
-data class RomHeader(
-        val headerVersion: Int,
-        val romName: String,
-        val mappingMode: Byte,
-        val cartridgeType: Byte,
-        val romSize: Byte,
-        val ramSize: Byte,
-        val region: Byte,
-        val devId: Any,
-        val romVersion: Byte,
-        val complement: Int,
-        val checksum: Int,
-        val coCpuType: Byte,
-        val gameCode: String,
-        val flash: Byte,
-        val exRamSize: Byte,
-        val specialVersion: Byte,
-        val emulationVectors: Vectors,
-        val nativeVectors: Vectors
-)
-
-data class Vectors(
-    val cop: Int,
-    val brk: Int,
-    val abort: Int,
-    val nmi: Int,
-    val reset: Int,
-    val irq: Int
-)
 
 enum class MemoryArea {
     HARDWARE_REGISTER,
