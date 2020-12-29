@@ -1,8 +1,11 @@
 package de.dde.snes.da.gui
 
+import de.dde.snes.da.Disassembler
+import de.dde.snes.da.Disassembler.settings
 import de.dde.snes.da.project.Project
 import de.dde.snes.da.gui.hex.HexDataSourceByteArray
 import de.dde.snes.da.gui.hex.HexViewer
+import de.dde.snes.da.gui.table.TableControl
 import de.dde.snes.da.memory.ROMByte
 import de.dde.snes.da.memory.ROMByteType
 import de.dde.snes.da.processor.instruction
@@ -41,6 +44,8 @@ class Controller(
     lateinit var root: BorderPane
     @FXML
     lateinit var tabRom: Tab
+    @FXML
+    lateinit var tabRomRaw: Tab
 
     @FXML
     lateinit var lblFile: Label
@@ -52,24 +57,8 @@ class Controller(
     @FXML
     lateinit var mnuItemSave: MenuItem
 
-    @FXML
-    lateinit var tblRom: TreeTableView<ROMByte>
-    @FXML
-    lateinit var tblColLbl: TreeTableColumn<ROMByte, String>
-    @FXML
-    lateinit var tblColOff: TreeTableColumn<ROMByte, Any>
-    @FXML
-    lateinit var tblColAdd: TreeTableColumn<ROMByte, Number>
-    @FXML
-    lateinit var tblColVal: TreeTableColumn<ROMByte, Any>
-    @FXML
-    lateinit var tblColIns: TreeTableColumn<ROMByte, Any>
-    @FXML
-    lateinit var tblColCom: TreeTableColumn<ROMByte, String>
-
     lateinit var v: HexViewer
-
-    val settings: Settings = PreferencesSettings()
+    lateinit var table: TableControl
 
     val fileProperty: ObjectProperty<ROMFile> = SimpleObjectProperty(this, "file", null)
     var file: ROMFile? by fileProperty
@@ -79,77 +68,14 @@ class Controller(
 
     override fun initialize(location: URL?, resources: ResourceBundle?) {
         v = HexViewer()
+        table = TableControl(this)
 
-        tabRom.content = v
-        tblRom.isShowRoot = false
-
-        tblColLbl.cellValueFactory = callback { it?.value?.value?.labelProperty }
-        tblColCom.cellValueFactory = callback { it?.value?.value?.commentProperty }
-
-        tblColLbl.cellFactory = TextFieldTreeTableCell.forTreeTableColumn()
-        tblColCom.cellFactory = TextFieldTreeTableCell.forTreeTableColumn()
-
-        tblColOff.cellFactory = treeTableCell { _, empty ->
-            text = if (empty)
-                ""
-            else
-                treeTableRow.item?.let { "%06X".format(it.index) } ?: ""
-        }
-
-        tblColAdd.cellFactory = treeTableCell { _, empty ->
-            text = if (empty) ""
-            else treeTableRow.item?.let { project?.mappingMode?.toSnesAddress(it.index)?.let { addr -> "%06X".format(addr) } }?: ""
-        }
-
-        tblColVal.cellFactory = treeTableCell { _, empty ->
-            text = if (empty)
-                ""
-            else
-                treeTableRow.item?.let { "%02X".format(it.b) } ?: ""
-        }
-
-        tblColIns.cellFactory = treeTableCell { _, empty ->
-            text = if (empty)
-                ""
-            else
-                treeTableRow.item?.b?.let { instruction(it).operation.symbol }?: ""
-        }
-
-        tblRom.rowFactory = callback {
-            object : TreeTableRow<ROMByte>() {
-                val typeListener = ChangeListener<ROMByteType> { _, o, _ -> typeChanged(o) }
-
-                override fun updateItem(item: ROMByte?, empty: Boolean) {
-                    val old = this.item?.type
-
-                    if (this.item != null) {
-                        this.item.typeProperty.removeListener(typeListener)
-                    }
-
-                    super.updateItem(item, empty)
-
-                    if (item != null) {
-                        item.typeProperty.addListener(typeListener)
-                    }
-
-                    typeChanged(old)
-                }
-
-                fun typeChanged(old: ROMByteType?) {
-
-                    old?.let { styleClass.remove(it.name.toLowerCase()) }
-                    item?.type?.let { styleClass.add(it.name.toLowerCase()) }
-                }
-            }
-        }
+        tabRom.content = table.root
+        tabRomRaw.content = v
 
         projectProperty.addListener { _, _, project ->
             lblFile.text = project?.romFile?.file?.name?: ""
             v.hexData = project?.let { HexDataSourceByteArray(it.romFile.bytes) }?: null
-
-            val root = TreeItem<ROMByte>(null)
-            project?.romBytes?.forEach { root.children.add(TreeItem(it)) }
-            tblRom.root = root
         }
 
         mnuOpenLast.disableProperty().bind(Bindings.isEmpty(mnuOpenLast.items))

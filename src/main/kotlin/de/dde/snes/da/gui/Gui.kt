@@ -1,5 +1,6 @@
 package de.dde.snes.da.gui
 
+import de.dde.snes.da.Disassembler
 import javafx.application.Application
 import javafx.fxml.FXMLLoader
 import javafx.scene.Scene
@@ -15,9 +16,10 @@ class Gui : Application() {
     override fun start(primaryStage: Stage) {
         val loader = FXMLLoader(javaClass.getResource("Gui.fxml"))
         loader.setController(Controller(primaryStage))
+        loader.resources = Disassembler.resourceBundle
         primaryStage.scene = Scene(loader.load())
         primaryStage.scene.stylesheets.add(javaClass.getResource("style.css").toExternalForm())
-        primaryStage.title = "SNES Disassembler"
+        primaryStage.title = Disassembler.resourceBundle.getString("de.dde.snes.da.title")
         try {
             // https://icon-library.com/icon/super-nintendo-icon-11.html
             // <a href="https://icon-library.net/icon/super-nintendo-icon-11.html">Super Nintendo Icon #94543</a>

@@ -9,7 +9,8 @@ val allMappingModes: List<MappingMode>
 sealed class MappingMode(
     val headerStart: Int,
     val mode: Int,
-    val name: String
+    val name: String,
+    val bankSize: Int = 0x10000
 ) {
     fun readHeader(rom: ByteArray): RomHeader {
         val headerVersion = when {
@@ -247,7 +248,7 @@ sealed class MappingMode(
     }
 }
 
-object LoROM : MappingMode(0x7FB0, 0x20, "LoROM") {
+object LoROM : MappingMode(0x7FB0, 0x20, "LoROM", 0x8000) {
 
     override fun getMemoryAddress(bank: Int, address: Int): MemoryAddress {
         return when {

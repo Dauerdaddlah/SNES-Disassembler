@@ -11,18 +11,19 @@
 <?import javafx.scene.control.TreeTableView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
 <BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
-          <Menu mnemonicParsing="false" text="File">
+          <Menu mnemonicParsing="false" text="%de.dde.snes.da.mnu.file">
             <items>
-              <MenuItem mnemonicParsing="false" onAction="#doOpen" text="Open" />
-                  <Menu fx:id="mnuOpenLast" mnemonicParsing="false" text="Open Last" />
-                  <MenuItem fx:id="mnuItemSave" mnemonicParsing="false" onAction="#doSave" text="Save" />
-                  <MenuItem fx:id="mnuItemSaveAs" mnemonicParsing="false" onAction="#doSaveAs" text="Save As..." />
-              <MenuItem mnemonicParsing="false" onAction="#doClose" text="Close" />
+              <MenuItem mnemonicParsing="false" onAction="#doOpen" text="%de.dde.snes.da.mnu.file.open" />
+                  <Menu fx:id="mnuOpenLast" mnemonicParsing="false" text="%de.dde.snes.da.mnu.file.openlast" />
+                  <MenuItem fx:id="mnuItemSave" mnemonicParsing="false" onAction="#doSave" text="%de.dde.snes.da.mnu.file.save" />
+                  <MenuItem fx:id="mnuItemSaveAs" mnemonicParsing="false" onAction="#doSaveAs" text="%de.dde.snes.da.mnu.file.saveas" />
+                  <MenuItem mnemonicParsing="false" onAction="#doClose" text="%de.dde.snes.da.mnu.file.close" />
             </items>
           </Menu>
         </menus>
@@ -33,21 +34,8 @@
          <center>
             <TabPane tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
               <tabs>
-                  <Tab text="ROM">
-                     <content>
-                        <TreeTableView fx:id="tblRom" editable="true" prefHeight="200.0" prefWidth="200.0" showRoot="false">
-                          <columns>
-                            <TreeTableColumn fx:id="tblColOff" editable="false" prefWidth="75.0" sortable="false" text="ROM-Offset" />
-                            <TreeTableColumn fx:id="tblColLbl" prefWidth="75.0" sortable="false" text="Label" />
-                              <TreeTableColumn fx:id="tblColAdd" editable="false" prefWidth="95.0" sortable="false" text="SNES-Address" />
-                              <TreeTableColumn fx:id="tblColVal" editable="false" prefWidth="75.0" sortable="false" text="Value" />
-                              <TreeTableColumn fx:id="tblColIns" editable="false" prefWidth="75.0" sortable="false" text="Instruction" />
-                              <TreeTableColumn fx:id="tblColCom" prefWidth="75.0" sortable="false" text="Comment" />
-                          </columns>
-                        </TreeTableView>
-                     </content>
-                  </Tab>
-                <Tab fx:id="tabRom" text="ROM (Raw)" />
+                  <Tab fx:id="tabRom" text="%de.dde.snes.da.tab.rom" />
+                <Tab fx:id="tabRomRaw" text="%de.dde.snes.da.tab.romraw" />
               </tabs>
             </TabPane>
          </center></BorderPane>

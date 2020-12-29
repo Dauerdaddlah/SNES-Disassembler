@@ -3,21 +3,26 @@ package de.dde.snes.da.settings
 import de.dde.snes.da.SNES
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.*
 import java.util.prefs.Preferences
 
 class PreferencesSettings : Settings {
+    val root = Preferences.userNodeForPackage(SNES::class.java)
+
+    override var lastFileOpened: Path?
+        get() = root.get(LASTFILEOPENED, null)?.let { Paths.get(it) }
+        set(value) { root.put(LASTFILEOPENED, value.toString()) }
+
+    override var language: Locale
+        get() = Locale.forLanguageTag(root.get(LANGUAGE, Locale.ENGLISH.toLanguageTag()))
+        set(value) { root.put(LANGUAGE, value.toLanguageTag()) }
+
     override var lastProjectsCount: Int
         get() = root.getInt(LASTPROJECTSCOUNT, 10)
         set(value) { if (value in 1..20) root.putInt(LASTPROJECTSCOUNT, value) }
     val _lastProjects = mutableListOf<Path>()
     override val lastProjects: List<Path>
         get() = _lastProjects
-
-    val root = Preferences.userNodeForPackage(SNES::class.java)
-
-    override var lastFileOpened: Path?
-        get() = root.get(LASTFILEOPENED, null)?.let { Paths.get(it) }
-        set(value) { root.put(LASTFILEOPENED, value.toString()) }
 
     init {
         for (i in 0..lastProjectsCount) {
@@ -51,5 +56,6 @@ class PreferencesSettings : Settings {
         private const val LASTFILEOPENED = "lastFileOpened"
         private const val LASTPROJECTSCOUNT = "LastProjectsCount"
         private const val LASTPROJECT = "LastProject"
+        private const val LANGUAGE = "Language"
     }
 }
