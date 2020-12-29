@@ -19,6 +19,9 @@
           <Menu mnemonicParsing="false" text="File">
             <items>
               <MenuItem mnemonicParsing="false" onAction="#doOpen" text="Open" />
+                  <Menu fx:id="mnuOpenLast" mnemonicParsing="false" text="Open Last" />
+                  <MenuItem fx:id="mnuItemSave" mnemonicParsing="false" onAction="#doSave" text="Save" />
+                  <MenuItem fx:id="mnuItemSaveAs" mnemonicParsing="false" onAction="#doSaveAs" text="Save As..." />
               <MenuItem mnemonicParsing="false" onAction="#doClose" text="Close" />
             </items>
           </Menu>
