@@ -21,6 +21,9 @@
             <TreeTableColumn fx:id="tblColIns" editable="false" prefWidth="75.0" sortable="false" text="%de.dde.snes.da.rom.instruction" />
             <TreeTableColumn fx:id="tblColCom" prefWidth="75.0" sortable="false" text="%de.dde.snes.da.rom.comment" />
         </columns>
+         <columnResizePolicy>
+            <TreeTableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+         </columnResizePolicy>
       </TreeTableView>
    </center>
    <top>

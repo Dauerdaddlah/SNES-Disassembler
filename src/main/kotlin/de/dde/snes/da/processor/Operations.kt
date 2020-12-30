@@ -1,7 +1,6 @@
 package de.dde.snes.da.processor
 
 import de.dde.snes.da.ProcessorMode
-import de.dde.snes.da.SNES
 
 val allOperations: List<Operation>
     get() = listOf(
@@ -99,10 +98,7 @@ val allOperations: List<Operation>
             XCE
     )
 
-sealed class Operation(val symbol: String, val mRelative: Boolean = false, val iRelative: Boolean = false) {
-    open fun process(snes: SNES, processor: Processor, param: Int) {
-    }
-}
+sealed class Operation(val symbol: String, val mRelative: Boolean = false, val iRelative: Boolean = false)
 
 object ADC : Operation("ADC", mRelative = true)
 object AND : Operation("AND", mRelative = true)
@@ -193,33 +189,11 @@ object TXY : Operation("TXY", iRelative = true)
 object TYA : Operation("TYA", mRelative = true)
 
 
-object TYX : Operation("TYX") {
-    override fun process(snes: SNES, processor: Processor, param: Int) {
-        val y = processor.y.value
-        processor.y.value = processor.x.value
-        processor.x.value = y
-    }
-}
+object TYX : Operation("TYX")
 
 object WAI : Operation("WAI")
 object WDM : Operation("WDM")
 
-object XBA : Operation("XBA") {
-    override fun process(snes: SNES, processor: Processor, param: Int) {
-        processor.a.xba()
-    }
-}
+object XBA : Operation("XBA")
 
-object XCE : Operation("XCE") {
-    override fun process(snes: SNES, processor: Processor, param: Int) {
-        val c = processor.p.carry
-        processor.p.carry = processor.mode.asBoolean()
-        processor.mode = when (c) {
-            null -> ProcessorMode.UNKNOWN
-            true -> ProcessorMode.EMULATION
-            else -> ProcessorMode.NATIVE
-        }
-
-        processor.checkSizes()
-    }
-}
+object XCE : Operation("XCE")

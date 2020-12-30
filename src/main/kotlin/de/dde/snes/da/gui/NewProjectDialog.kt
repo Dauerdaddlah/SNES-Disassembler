@@ -1,8 +1,7 @@
 package de.dde.snes.da.gui
 
-import de.dde.snes.da.rom.MappingMode
-import de.dde.snes.da.rom.ROMFile
-import javafx.css.PseudoClass
+import de.dde.snes.da.memory.MappingMode
+import de.dde.snes.da.memory.ROMFile
 import javafx.fxml.FXML
 import javafx.fxml.FXMLLoader
 import javafx.scene.control.*

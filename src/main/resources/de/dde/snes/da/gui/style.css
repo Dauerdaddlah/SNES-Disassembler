@@ -9,7 +9,7 @@
 }
 
 .address.zero {
-    -fx-backgroud-color: darkgrey
+    -fx-background-color: darkgrey
 }
 .address.ffff {
     -fx-background-color: lightgrey
@@ -54,4 +54,12 @@
 
 .tree-table-row-cell.unknown {
     -fx-background-color: grey;
+}
+
+.tree-table-row-cell.data {
+    -fx-background-color: green
+}
+
+.tree-table-row-cell.operand .cell {
+    -fx-text-fill: lightgrey
 }

@@ -1,6 +1,10 @@
 package de.dde.snes.da.processor
 
 import de.dde.snes.da.Byte
+import de.dde.snes.da.Long
+import de.dde.snes.da.longByte
+import de.dde.snes.da.memory.ROMByte
+import de.dde.snes.da.project.Project
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -139,13 +143,43 @@ fun main() {
 data class Instruction(
         val operation: Operation,
         val addressMode: AddressMode
-)
+) {
+    fun getOperandBytes(project: Project, byte: ROMByte): List<ROMByte> {
+        return when (val b = addressMode.neededBytes(byte.state.memory, byte.state.index)) {
+            0 -> emptyList()
+            else -> {
+                val iSnesStart = project.mappingMode.toSnesAddress(byte.index + 1)
+                val iSnesEnd = iSnesStart + b - 1
+
+                if (iSnesStart.longByte() == iSnesEnd.longByte()) {
+                    val memoryArea = project.mappingMode.getMemoryAddress(iSnesStart)
+
+                    return project.romBytes.subList(memoryArea.index, memoryArea.index + b)
+                } else {
+                    val ret = mutableListOf<ROMByte>()
+
+                    var index = iSnesStart
+
+                    repeat(b) {
+                        index = Long(index + 1, iSnesStart.longByte())
+                        val memoryArea = project.mappingMode.getMemoryAddress(iSnesStart)
+
+                        ret.add(project.romBytes[memoryArea.index])
+                    }
+
+                    ret
+                }
+            }
+        }
+    }
+}
+
 fun instruction(opCode: Byte) = allInstructions[Byte(opCode)]
 
 val allInstructions = arrayOf(
-        /** 0x00 */ Instruction(BRK, Stack),
+        /** 0x00 */ Instruction(BRK, BrkCop),
         /** 0x01 */ Instruction(ORA, DirectIndexedXIndirect),
-        /** 0x02 */ Instruction(COP, Stack),
+        /** 0x02 */ Instruction(COP, BrkCop),
         /** 0x03 */ Instruction(ORA, StackRelative),
         /** 0x04 */ Instruction(TSB, Direct),
         /** 0x05 */ Instruction(ORA, Direct),

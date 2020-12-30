@@ -1,5 +1,6 @@
 package de.dde.snes.da.util
 
+import javafx.beans.property.BooleanProperty
 import javafx.beans.property.DoubleProperty
 import javafx.beans.property.Property
 import javafx.beans.property.ReadOnlyProperty
@@ -12,6 +13,9 @@ operator fun <T> Property<T>.setValue(thisRef: Any?, property: KProperty<*>, val
 
 operator fun DoubleProperty.getValue(thisRef: Any?, property: KProperty<*>): Double = this.get()
 operator fun DoubleProperty.setValue(thisRef: Any?, property: KProperty<*>, value: Double) = this.set(value)
+
+operator fun BooleanProperty.getValue(thisRef: Any?, property: KProperty<*>): Boolean = this.get()
+operator fun BooleanProperty.setValue(thisRef: Any?, property: KProperty<*>, value: Boolean) = this.set(value)
 
 fun <S, T> callback(f: (S) -> T)
     = javafx.util.Callback<S, T> { f(it) }

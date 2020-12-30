@@ -1,4 +1,4 @@
-package de.dde.snes.da.rom
+package de.dde.snes.da.memory
 
 import java.io.File
 import java.nio.file.Files

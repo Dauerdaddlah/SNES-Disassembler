@@ -1,13 +1,13 @@
 package de.dde.snes.da.settings
 
-import de.dde.snes.da.SNES
+import de.dde.snes.da.Disassembler
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 import java.util.prefs.Preferences
 
 class PreferencesSettings : Settings {
-    val root = Preferences.userNodeForPackage(SNES::class.java)
+    val root = Preferences.userNodeForPackage(Disassembler::class.java)
 
     override var lastFileOpened: Path?
         get() = root.get(LASTFILEOPENED, null)?.let { Paths.get(it) }

@@ -12,6 +12,7 @@ fun Byte(b: Byte): Int = Byte(b.toInt())
 fun Byte(b: Int): Int = b and 0xFF
 fun Word(lowByte: Byte, hiByte: Byte): Int = (Byte(lowByte) or (Byte(hiByte) shl 8))
 fun Word(lowByte: Int, hiByte: Int): Int = (Byte(lowByte) or (Byte(hiByte) shl 8))
+fun Long(address: Int, longByte: Int) = address.asShort() or (longByte.asByte() shl 16)
 
 fun Int.toAscii(def: Char = '.') = if (Character.isISOControl(this)) def else this.toChar()
 fun Byte.toAscii(def: Char = '.') = Byte(this).toAscii(def)

@@ -1,7 +1,7 @@
 package de.dde.snes.da.gui
 
 import de.dde.snes.da.*
-import de.dde.snes.da.rom.*
+import de.dde.snes.da.memory.*
 import javafx.collections.FXCollections
 import javafx.fxml.FXML
 import javafx.fxml.FXMLLoader

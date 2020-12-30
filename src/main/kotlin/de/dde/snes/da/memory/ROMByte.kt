@@ -16,8 +16,12 @@ class ROMByte(
     val commentProperty: StringProperty = SimpleStringProperty(this, "comment", null)
     var comment: String? by commentProperty
 
+    val state = SNESState()
+
     val typeProperty: ObjectProperty<ROMByteType> = SimpleObjectProperty(this, "type", ROMByteType.UNKNOWN)
-    var type: ROMByteType? by typeProperty
+    var type: ROMByteType
+        get() = typeProperty.value
+        set(value) { typeProperty.value = value }
 
     val jumpTypeProperty: ReadOnlySetProperty<ROMJumpType> = ReadOnlySetWrapper(this, "jumpType", FXCollections.observableSet(EnumSet.noneOf(ROMJumpType::class.java))).readOnlyProperty
     val jumpType: ObservableSet<ROMJumpType> get() = jumpTypeProperty.value

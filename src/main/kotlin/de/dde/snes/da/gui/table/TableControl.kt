@@ -7,15 +7,18 @@ import de.dde.snes.da.memory.ROMByteType
 import de.dde.snes.da.processor.instruction
 import de.dde.snes.da.util.callback
 import de.dde.snes.da.util.treeTableCell
+import javafx.application.Platform
 import javafx.beans.value.ChangeListener
+import javafx.event.Event
+import javafx.event.EventHandler
 import javafx.fxml.FXML
 import javafx.fxml.FXMLLoader
 import javafx.fxml.Initializable
 import javafx.scene.Parent
 import javafx.scene.control.*
 import javafx.scene.control.cell.TextFieldTreeTableCell
-import javafx.scene.layout.HBox
-import java.lang.NumberFormatException
+import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyEvent
 import java.net.URL
 import java.util.*
 
@@ -29,7 +32,7 @@ class TableControl(
     @FXML
     lateinit var tblColLbl: TreeTableColumn<ROMByte, String>
     @FXML
-    lateinit var tblColOff: TreeTableColumn<ROMByte, Any>
+    lateinit var tblColOff: TreeTableColumn<ROMByte, Int>
     @FXML
     lateinit var tblColAdd: TreeTableColumn<ROMByte, Number>
     @FXML
@@ -64,8 +67,8 @@ class TableControl(
         tblColLbl.cellValueFactory = callback { it?.value?.value?.labelProperty }
         tblColCom.cellValueFactory = callback { it?.value?.value?.commentProperty }
 
-        tblColLbl.cellFactory = TextFieldTreeTableCell.forTreeTableColumn()
-        tblColCom.cellFactory = TextFieldTreeTableCell.forTreeTableColumn()
+        tblColLbl.cellFactory = callback { EditCell() }
+        tblColCom.cellFactory = callback { EditCell() }
 
         tblColOff.cellFactory = treeTableCell { _, empty ->
             text = if (empty)
@@ -87,10 +90,28 @@ class TableControl(
         }
 
         tblColIns.cellFactory = treeTableCell { _, empty ->
-            text = if (empty)
+            text = if (empty || treeTableRow.item == null)
                 ""
-            else
-                treeTableRow.item?.b?.let { instruction(it).operation.symbol }?: ""
+            else {
+                val byte = treeTableRow.item
+                val inst = instruction(byte.b)
+
+                val s = StringBuilder(inst.operation.symbol)
+
+                if (inst.operation.mRelative) {
+                    s.append(".${if (byte.state.memory) "W" else "B"}")
+                } else if (inst.operation.iRelative) {
+                    s.append(".${if (byte.state.index) "W" else "B"}")
+                }
+
+                val operand = inst.getOperandBytes(controller.project?: error(""), byte)
+
+                if (operand.isNotEmpty()) {
+                    s.append(' ').append(inst.addressMode.format(operand))
+                }
+
+                s.toString()
+            }
         }
 
         tblRom.rowFactory = callback {
@@ -136,8 +157,21 @@ class TableControl(
                 numPages = project.mappingMode.bankSize / 0x100
             }
 
-            curBank = -2
-            setVisibleData(-1, -1)
+            setVisibleData(-1, -1, true)
+        }
+
+        tblRom.onKeyPressed = EventHandler{
+            if (tblRom.editingCell == null) {
+                if (it.code.isLetterKey || it.code.isDigitKey) {
+                    val focusedCellPosition = tblRom.focusModel.focusedCell
+
+                    if (focusedCellPosition.tableColumn.isEditable) {
+                        startEditKey = it.text
+                        tblRom.edit(focusedCellPosition.row, focusedCellPosition.tableColumn)
+                        startEditKey = null
+                    }
+                }
+            }
         }
 
         tblRom.root = TreeItem()
@@ -197,8 +231,8 @@ class TableControl(
         setVisibleData(curBank, numPages)
     }
 
-    fun setVisibleData(bank: Int, page: Int) {
-        if (curBank == bank && curPage == page)
+    fun setVisibleData(bank: Int, page: Int, updateAlways: Boolean = false) {
+        if (!updateAlways && curBank == bank && curPage == page)
             return
 
         curBank = maxOf(-1, minOf(numBanks - 1, bank))
@@ -221,6 +255,105 @@ class TableControl(
             }
 
             tblRom.root.children.setAll(treeItems.subList(minOf(treeItems.size, romStart), minOf(treeItems.size, romEnd)))
+        }
+    }
+
+    private var startEditKey: String? = null
+
+    private inner class EditCell<S> : TreeTableCell<S, String>() {
+        private val textfield = TextField().also {
+            it.focusedProperty().addListener { _, _, focused ->
+                if (!focused)
+                    commitEdit(it.text)
+            }
+
+            it.onKeyPressed = EventHandler { e ->
+                when (e.code) {
+                    KeyCode.ESCAPE -> {
+                        cancelEdit()
+                        e.consume()
+                    }
+                    else -> {
+                    }
+                }
+            }
+
+            it.onAction = EventHandler { _ ->
+                commitEdit(it.text)
+            }
+        }
+
+        override fun startEdit() {
+            if (isEditing)
+                return
+
+            super.startEdit()
+
+            if (isEditing) {
+                graphic = textfield
+                text = ""
+
+                textfield.text = item
+                textfield.requestFocus()
+
+                if (startEditKey != null) {
+                    textfield.text = startEditKey
+                    textfield.deselect()
+                    textfield.end()
+                }
+            }
+        }
+
+        override fun cancelEdit() {
+            if (isEditing
+                    && tblRom.focusModel.focusedCell != null
+                    && (tblRom.focusModel.focusedCell.row != treeTableRow.index
+                        || tblRom.focusModel.focusedCell.tableColumn != tableColumn)) {
+                val editingCell = TreeTablePosition(treeTableView, treeTableRow.index, tableColumn)
+
+                // Inform the TableView of the edit being ready to be committed.
+                // Inform the TableView of the edit being ready to be committed.
+                val editEvent = TreeTableColumn.CellEditEvent(
+                        treeTableView,
+                        editingCell,
+                        TreeTableColumn.editCommitEvent(),
+                        textfield.text
+                )
+
+                Event.fireEvent(tableColumn, editEvent)
+            }
+            super.cancelEdit()
+
+            graphic = null
+            text = item
+        }
+
+        override fun commitEdit(newValue: String?) {
+            super.commitEdit(newValue)
+
+            graphic = null
+            text = item
+        }
+
+        override fun updateItem(item: String?, empty: Boolean) {
+            super.updateItem(item, empty)
+
+            when {
+                empty -> {
+                    graphic = null
+                    text = ""
+                }
+                isEditing -> {
+                    graphic = textfield
+                    text = ""
+
+                    textfield.text = item
+                }
+                else -> {
+                    graphic = null
+                    text = item
+                }
+            }
         }
     }
 }

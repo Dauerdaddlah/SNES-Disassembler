@@ -1,9 +1,13 @@
 package de.dde.snes.da.processor
 
+import de.dde.snes.da.memory.ROMByte
+import java.lang.StringBuilder
+
 val allAddressModes: List<AddressMode>
     get() = listOf(
             ImmediateAccumulator,
             ImmediateIndex,
+            BrkCop,
             Immediate8,
             Implied,
             ProgramCounterRelative,
@@ -33,11 +37,28 @@ val allAddressModes: List<AddressMode>
 
 sealed class AddressMode {
     abstract fun neededBytes(processor: Processor): Int
+
+    abstract fun neededBytes(m16: Boolean, i16: Boolean): Int
+
+    abstract fun format(operand: List<ROMByte>): String
 }
 
 class AddressModeSimple(val bytesNeeded: Int) : AddressMode() {
     override fun neededBytes(processor: Processor): Int {
         return bytesNeeded
+    }
+
+    override fun neededBytes(m16: Boolean, i16: Boolean): Int {
+        return bytesNeeded
+    }
+
+    override fun format(operand: List<ROMByte>): String {
+        var s = ""
+        for (o in operand) {
+            s = "%02X%s".format(o.b, s)
+        }
+
+        return "$$s"
     }
 }
 
@@ -46,13 +67,44 @@ object ImmediateAccumulator : AddressMode() {
     override fun neededBytes(processor: Processor): Int {
         return if (processor.a.size16.isTrue()) 2 else 1
     }
+
+    override fun neededBytes(m16: Boolean, i16: Boolean): Int {
+        return if (m16) 2 else 1
+    }
+
+    override fun format(operand: List<ROMByte>): String {
+        var s = ""
+        for (o in operand) {
+            s = "%02X%s".format(o.b, s)
+        }
+
+        return "#$$s"
+    }
 }
 /** # */
 object ImmediateIndex : AddressMode() {
     override fun neededBytes(processor: Processor): Int {
         return if (processor.x.size16.isTrue()) 2 else 1
     }
+
+    override fun neededBytes(m16: Boolean, i16: Boolean): Int {
+        return if (i16) 2 else 1
+    }
+
+    override fun format(operand: List<ROMByte>): String {
+        var s = ""
+        for (o in operand) {
+            s = "%02X%s".format(o.b, s)
+        }
+
+        return "#$$s"
+    }
 }
+
+/** s */
+val BrkCop = AddressModeSimple(1)
+
+
 /** # */
 val Immediate8 = AddressModeSimple(1)
 /** i */
