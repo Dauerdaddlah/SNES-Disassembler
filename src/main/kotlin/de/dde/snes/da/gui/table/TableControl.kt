@@ -98,12 +98,6 @@ class TableControl(
 
                 val s = StringBuilder(inst.operation.symbol)
 
-                if (inst.operation.mRelative) {
-                    s.append(".${if (byte.state.memory) "W" else "B"}")
-                } else if (inst.operation.iRelative) {
-                    s.append(".${if (byte.state.index) "W" else "B"}")
-                }
-
                 val operand = inst.getOperandBytes(controller.project?: error(""), byte)
 
                 if (operand.isNotEmpty()) {

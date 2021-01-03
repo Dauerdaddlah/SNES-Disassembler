@@ -243,7 +243,7 @@ val allInstructions = arrayOf(
         /** 0x3F */ Instruction(AND, AbsoluteIndexedLong),
         /** 0x40 */ Instruction(RTI, Stack),
         /** 0x41 */ Instruction(EOR, DirectIndexedXIndirect),
-        /** 0x42 */ Instruction(WDM, Implied),
+        /** 0x42 */ Instruction(WDM, BrkCop),
         /** 0x43 */ Instruction(EOR, StackRelative),
         /** 0x44 */ Instruction(MVP, BlockMove),
         /** 0x45 */ Instruction(EOR, Direct),

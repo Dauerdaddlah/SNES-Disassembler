@@ -43,7 +43,7 @@ sealed class AddressMode {
     abstract fun format(operand: List<ROMByte>): String
 }
 
-class AddressModeSimple(val bytesNeeded: Int) : AddressMode() {
+open class AddressModeSimple(val bytesNeeded: Int) : AddressMode() {
     override fun neededBytes(processor: Processor): Int {
         return bytesNeeded
     }
@@ -104,55 +104,170 @@ object ImmediateIndex : AddressMode() {
 /** s */
 val BrkCop = AddressModeSimple(1)
 
-
 /** # */
 val Immediate8 = AddressModeSimple(1)
+
 /** i */
 val Implied = AddressModeSimple(0)
+
 /** r */
 val ProgramCounterRelative = AddressModeSimple(1)
+
 /** rl */
 val ProgramCounterRelativeLong = AddressModeSimple(2)
+
 /** d */
 val Direct = AddressModeSimple(1)
+
 /** d,x */
-val DirectIndexedX = AddressModeSimple(1)
+val DirectIndexedX = object : AddressModeSimple(1) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "$s,X"
+    }
+}
+
 /** d,y */
-val DirectIndexedY = AddressModeSimple(1)
+val DirectIndexedY = object : AddressModeSimple(1) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+        return "$s,Y"
+    }
+}
+
 /** (d) - several, like ORA, AND, CMP, ... */
-val DirectIndirect = AddressModeSimple(1)
+val DirectIndirect = object : AddressModeSimple(1) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "($s)"
+    }
+}
+
 /** (d,x) - several, like ORA, AND, CMP, ... */
-val DirectIndexedXIndirect = AddressModeSimple(1)
+val DirectIndexedXIndirect = object : AddressModeSimple(1) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "($s,X)"
+    }
+}
+
 /** (d),y - several, like ORA, AND, CMP, ... */
-val DirectIndirectIndexedY = AddressModeSimple(1)
+val DirectIndirectIndexedY = object : AddressModeSimple(1) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "($s),Y"
+    }
+}
 /** [d] - several, like ORA, AND, CMP, ... */
-val DirectIndirectLong = AddressModeSimple(1)
+val DirectIndirectLong = object : AddressModeSimple(1) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "[$s]"
+    }
+}
+
 /** [d],y - several, like ORA, AND, CMP, ... */
-val DirectIndirectIndexedYLong = AddressModeSimple(1)
+val DirectIndirectIndexedYLong = object : AddressModeSimple(1) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "[$s],Y"
+    }
+}
+
 /** a */
 val Absolute = AddressModeSimple(2)
+
 /** a,x */
-val AbsoluteIndexedX = AddressModeSimple(2)
+val AbsoluteIndexedX = object : AddressModeSimple(2) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "$s,X"
+    }
+}
+
 /** a,y */
-val AbsoluteIndexedY = AddressModeSimple(2)
+val AbsoluteIndexedY = object : AddressModeSimple(2) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "$s,Y"
+    }
+}
+
 /** al */
 val AbsoluteLong = AddressModeSimple(3)
+
 /** al,x */
-val AbsoluteIndexedLong = AddressModeSimple(3)
+val AbsoluteIndexedLong = object : AddressModeSimple(3) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "$s,X"
+    }
+}
+
 /** s */
 val Stack = AddressModeSimple(0)
+
 /** d,s */
-val StackRelative = AddressModeSimple(1)
+val StackRelative = object : AddressModeSimple(1) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "$s,S"
+    }
+}
+
 /** (d,s),y - several, like ORA, AND, CMP, ... */
-val StackRelativeIndirectIndexedY = AddressModeSimple(1)
+val StackRelativeIndirectIndexedY = object : AddressModeSimple(1) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "($s,S),Y"
+    }
+}
+
 /** (a) - JMP */
-val AbsoluteIndirect = AddressModeSimple(2)
+val AbsoluteIndirect = object : AddressModeSimple(2) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "($s)"
+    }
+}
+
 /** [al] - JML */
-val AbsoluteIndirectLong = AddressModeSimple(3)
+val AbsoluteIndirectLong = object : AddressModeSimple(3) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "[$s]"
+    }
+}
+
 /** (a,x) - JMP, JSR */
-val AbsoluteIndexedIndirect = AddressModeSimple(2)
+val AbsoluteIndexedIndirect = object : AddressModeSimple(2) {
+    override fun format(operand: List<ROMByte>): String {
+        val s = super.format(operand)
+
+        return "($s,X)"
+    }
+}
+
 /** A */
 val Accumulator = AddressModeSimple(0)
+
 /** xyc */
-val BlockMove = AddressModeSimple(2)
+val BlockMove = object : AddressModeSimple(2) {
+    override fun format(operand: List<ROMByte>): String {
+        return "%02X,%02X".format(operand[1], operand[0])
+    }
+}
 
