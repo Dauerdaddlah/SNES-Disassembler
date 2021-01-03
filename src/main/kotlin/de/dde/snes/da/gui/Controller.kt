@@ -1,12 +1,15 @@
 package de.dde.snes.da.gui
 
+import de.dde.snes.da.Disassembler
 import de.dde.snes.da.Disassembler.settings
 import de.dde.snes.da.project.Project
 import de.dde.snes.da.gui.hex.HexDataSourceByteArray
 import de.dde.snes.da.gui.hex.HexViewer
 import de.dde.snes.da.gui.table.TableControl
-import de.dde.snes.da.project.ProjectLoader
+import de.dde.snes.da.project.ProjectLoaderSda
 import de.dde.snes.da.memory.ROMFile
+import de.dde.snes.da.project.ProjectLoader
+import de.dde.snes.da.project.ProjectLoaderDiztinguish
 import de.dde.snes.da.util.getValue
 import de.dde.snes.da.util.setValue
 import javafx.beans.binding.Bindings
@@ -79,26 +82,37 @@ class Controller(
     @FXML
     fun doOpen() {
         val chooser = FileChooser()
-        chooser.extensionFilters.add(FileChooser.ExtensionFilter("SNES ROM", "*.sfc"))
-        chooser.extensionFilters.add(FileChooser.ExtensionFilter("SNES Disassembly Project", "*.sda"))
+        chooser.title = Disassembler.resourceBundle.getString("de.dde.snes.da.open.title")
+
+        chooser.extensionFilters.add(FileChooser.ExtensionFilter(Disassembler.resourceBundle.getString("de.dde.snes.da.open.allFile"), "*.*"))
+        ProjectLoader.getAllLoaders().forEach {
+            chooser.extensionFilters.add(FileChooser.ExtensionFilter(it.translation, "*.${it.fileExtension}"))
+        }
         chooser.initialDirectory = (settings.lastFileOpened?.parent ?: Paths.get(".")).toFile()
         val file: File? = chooser.showOpenDialog(stage)
 
         if (file != null) {
             settings.lastFileOpened = file.toPath()
 
-            if (file.extension.toLowerCase() == "sda") {
-                doOpenProject(file)
-            } else {
+            if (file.extension.equals("sfc", true)) {
                 doOpenRom(file)
+            } else {
+                doOpenProject(file)
             }
         }
     }
 
     private fun doOpenProject(project: File) {
-        val loader = ProjectLoader(project.toPath())
-        this.project = loader.load()
-        this.project?.loader = loader
+        val loaderFactory = ProjectLoader.getAllLoaders().find { it.fileExtension.equals(project.extension, true) }?: ProjectLoaderSda.FACTORY
+        val loader = loaderFactory.buildLoader(project.toPath())
+
+        val p = loader.load()
+        p.loader = loader
+        this.project = p
+        this.file = p.romFile
+
+        settings.addLastProject(project.toPath())
+        refreshMnuLastOpened()
     }
 
     private fun doOpenRom(rom: File) {
@@ -133,14 +147,17 @@ class Controller(
         val project = project?: return
 
         val chooser = FileChooser()
-        chooser.extensionFilters.add(FileChooser.ExtensionFilter("SNES ROM", "*.sda"))
+        ProjectLoader.getAllLoaders().forEach {
+            chooser.extensionFilters.add(FileChooser.ExtensionFilter(it.translation, "*.${it.fileExtension}"))
+        }
         chooser.initialDirectory = (settings.lastFileOpened?.parent ?: Paths.get(".")).toFile()
-        chooser.initialFileName = project.romFile.file.name.let { it.substring(0, it.lastIndexOf('.')) + ".sda" }
+        chooser.initialFileName = project.romFile.file.name.let { it.substring(0, it.lastIndexOf('.')) }
 
         val file = chooser.showSaveDialog(stage)
         file?: return
 
-        project.loader = ProjectLoader(file.toPath())
+        val loader = ProjectLoader.getAllLoaders().find { it.fileExtension.equals(file.extension, true) }?.buildLoader(file.toPath())?: return
+        project.loader = loader
 
         doSave()
     }

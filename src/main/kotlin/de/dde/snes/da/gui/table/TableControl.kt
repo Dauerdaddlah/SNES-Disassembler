@@ -308,7 +308,9 @@ class TableControl(
             if (isEditing
                     && tblRom.focusModel.focusedCell != null
                     && (tblRom.focusModel.focusedCell.row != treeTableRow.index
-                        || tblRom.focusModel.focusedCell.tableColumn != tableColumn)) {
+                            || tblRom.focusModel.focusedCell.tableColumn != tableColumn)) {
+                // functionality borrowed and adapted from TreeTableCell.commitEdit to commit edit
+                // on focus lost if another cell is selected
                 val editingCell = TreeTablePosition(treeTableView, treeTableRow.index, tableColumn)
 
                 // Inform the TableView of the edit being ready to be committed.

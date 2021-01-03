@@ -37,17 +37,15 @@ class PreferencesSettings : Settings {
     override fun addLastProject(project: Path) {
         val p = project.toAbsolutePath()
 
-        if (p in _lastProjects) {
+        if (p in _lastProjects)
             _lastProjects.remove(p)
-            _lastProjects.add(0, p)
-        } else {
-            _lastProjects.add(p)
-        }
+
+        // ensure the last one opened is always on top
+        _lastProjects.add(0, p)
 
         val cnt = lastProjectsCount
-        while (_lastProjects.size > cnt) {
+        while (_lastProjects.size > cnt)
             _lastProjects.removeLast()
-        }
 
         _lastProjects.forEachIndexed { index, path -> root.put("$LASTPROJECT$index", path.toString()) }
     }
