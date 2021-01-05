@@ -147,6 +147,8 @@ data class Instruction(
     fun getOperandBytes(project: Project, byte: ROMByte): List<ROMByte> {
         return when (val b = addressMode.neededBytes(byte.state.memory, byte.state.index)) {
             0 -> emptyList()
+            else -> project.romBytes.subList(minOf(project.romBytes.size, byte.index + 1), minOf(project.romBytes.size, byte.index + 1 + b))
+            /* TODO
             else -> {
                 val iSnesStart = project.mappingMode.toSnesAddress(byte.index + 1)
                 val iSnesEnd = iSnesStart + b - 1
@@ -170,6 +172,7 @@ data class Instruction(
                     ret
                 }
             }
+             */
         }
     }
 }

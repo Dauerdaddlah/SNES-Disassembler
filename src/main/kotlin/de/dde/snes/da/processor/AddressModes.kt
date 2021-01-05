@@ -267,7 +267,7 @@ val Accumulator = AddressModeSimple(0)
 /** xyc */
 val BlockMove = object : AddressModeSimple(2) {
     override fun format(operand: List<ROMByte>): String {
-        return "%02X,%02X".format(operand[1], operand[0])
+        return "%02X,%02X".format(operand[1].b, operand[0].b)
     }
 }
 

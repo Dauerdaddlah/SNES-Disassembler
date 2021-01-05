@@ -69,7 +69,7 @@ sealed class MappingMode(
         val checksum = Word(rom[headerStart + 0x2e], rom[headerStart + 0x2f])
         val resetVector = Word(rom[headerStart + 0x4c], rom[headerStart + 0x4d])
 
-        if(resetVector < 0x8000) return score;  //$00:0000-7fff is never ROM data
+        if(resetVector < 0x8000) return score  //$00:0000-7fff is never ROM data
 
         val opcode = rom[(headerStart and 0x7fff.inv()) or (resetVector and 0x7fff)]  //first instruction executed
 
@@ -113,16 +113,19 @@ sealed class MappingMode(
             WDM,  //wdm
             SBC  //sbc $nnnnnn,x
             -> score -= 8
+
+            else -> {
+            }
         }
 
-        if(checksum + complement == 0xffff) score += 4;
+        if(checksum + complement == 0xffff) score += 4
 
-        if(mapMode == mode) score += 2;
+        if(mapMode == mode) score += 2
 
         return score
     }
 
-    abstract fun toSnesAddress(romOffset: Int): Int
+    abstract fun toSnesAddress(byte: ROMByte): Int
 
     open fun getMemoryAddress(address: Int) = getMemoryAddress(address.longByte(), address.asShort())
 
@@ -162,11 +165,14 @@ object LoROM : MappingMode(0x7FB0, 0x20, "LoROM", 0x8000) {
         }
     }
 
-    override fun toSnesAddress(romOffset: Int): Int {
-        val bank = romOffset shr 15
-        val addr = (romOffset and 0x7FFF) or 0x8000
+    override fun toSnesAddress(byte: ROMByte): Int {
+        val bank = byte.index shr 15
+        val addr = (byte.index and 0x7FFF) or 0x8000
 
-        return (bank shl 16) or addr
+        return when {
+            byte.state.pbr >= 0x80 -> ((bank shl 16) or 0x800000) or addr
+            else -> (bank shl 16) or addr
+        }
     }
 }
 
@@ -190,8 +196,13 @@ object HiROM : MappingMode(0xFFB0, 0x21, "HiROM") {
         }
     }
 
-    override fun toSnesAddress(romOffset: Int): Int {
-        return romOffset or 0x300000
+    override fun toSnesAddress(byte: ROMByte): Int {
+        return when {
+            byte.state.pbr >= 0xC0 -> byte.index or 0xC00000
+            byte.state.pbr >= 0x80 -> byte.index or 0x800000
+            byte.state.pbr >= 0x40 -> byte.index or 0x400000
+            else -> byte.index
+        }
     }
 }
 
@@ -210,7 +221,7 @@ object ExLoROM : MappingMode(0x407fb0, 0x32, "ExLoROM") {
         return score
     }
 
-    override fun toSnesAddress(romOffset: Int): Int {
+    override fun toSnesAddress(byte: ROMByte): Int {
         TODO("Not yet implemented")
     }
 }
@@ -230,7 +241,7 @@ object ExHiROM : MappingMode(0x40ffb0, 0x35, "ExHiROM") {
         return score
     }
 
-    override fun toSnesAddress(romOffset: Int): Int {
+    override fun toSnesAddress(byte: ROMByte): Int {
         TODO("Not yet implemented")
     }
 }

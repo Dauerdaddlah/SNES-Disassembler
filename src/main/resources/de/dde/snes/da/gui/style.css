@@ -63,3 +63,7 @@
 .tree-table-row-cell.operand .cell {
     -fx-text-fill: lightgrey
 }
+
+.centercol {
+    -fx-alignment: CENTER;
+}

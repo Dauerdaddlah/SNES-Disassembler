@@ -1,5 +1,6 @@
 package de.dde.snes.da.gui.table
 
+import com.sun.javafx.tk.Toolkit
 import de.dde.snes.da.Disassembler
 import de.dde.snes.da.gui.Controller
 import de.dde.snes.da.memory.ROMByte
@@ -19,6 +20,8 @@ import javafx.scene.control.*
 import javafx.scene.control.cell.TextFieldTreeTableCell
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyEvent
+import javafx.scene.text.Font
+import javafx.scene.text.TextAlignment
 import java.net.URL
 import java.util.*
 
@@ -79,7 +82,7 @@ class TableControl(
 
         tblColAdd.cellFactory = treeTableCell { _, empty ->
             text = if (empty) ""
-            else treeTableRow.item?.let { controller.project?.mappingMode?.toSnesAddress(it.index)?.let { addr -> "%06X".format(addr) } }?: ""
+            else treeTableRow.item?.let { controller.project?.mappingMode?.toSnesAddress(it)?.let { addr -> "%06X".format(addr) } }?: ""
         }
 
         tblColVal.cellFactory = treeTableCell { _, empty ->
@@ -90,7 +93,7 @@ class TableControl(
         }
 
         tblColIns.cellFactory = treeTableCell { _, empty ->
-            text = if (empty || treeTableRow.item == null)
+            text = if (empty || treeTableRow.item == null || controller.project == null)
                 ""
             else {
                 val byte = treeTableRow.item
@@ -98,7 +101,9 @@ class TableControl(
 
                 val s = StringBuilder(inst.operation.symbol)
 
-                val operand = inst.getOperandBytes(controller.project?: error(""), byte)
+                val project = controller.project?: return@treeTableCell
+
+                val operand = inst.getOperandBytes(project, byte)
 
                 if (operand.isNotEmpty()) {
                     s.append(' ').append(inst.addressMode.format(operand))
@@ -169,6 +174,41 @@ class TableControl(
         }
 
         tblRom.root = TreeItem()
+
+        tblRom.setColumnResizePolicy {
+            if (it.column?.isResizable == false)
+                return@setColumnResizePolicy false
+
+            val scroll = tblRom.lookup(".scroll-bar:vertical") as ScrollBar?
+
+            val tablewidth = tblRom.width
+            // adjust the starting width by the amount of the vertical scrollbar (if shown) to avoid the horizontal scrollbar
+            // I do not know where the additional number comes from (margin?) i just guessed it by trial and error
+            var remWidth = tablewidth - (if (scroll?.isVisible == true) { scroll.width + 3 } else 0.0)
+            val columnsToAdjust = mutableListOf<TreeTableColumn<*, *>>()
+
+            for (column in tblRom.columns) {
+                when {
+                    column == it.column -> {
+                        column.prefWidth = column.width + it.delta
+                        remWidth -= column.prefWidth
+                    }
+                    column.isResizable -> {
+                        columnsToAdjust.add(column)
+                        remWidth -= column.width
+                    }
+                    else -> {
+                        remWidth -= column.width
+                    }
+                }
+            }
+
+            val adjustment = remWidth / columnsToAdjust.size
+
+            columnsToAdjust.forEach { c -> c.prefWidth = c.width + adjustment }
+
+            true
+        }
 
         txtBank.setOnAction {
             try {
