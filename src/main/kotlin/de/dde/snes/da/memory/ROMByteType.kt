@@ -4,5 +4,11 @@ enum class ROMByteType {
     UNKNOWN,
     INSTRUCTION,
     OPERAND,
-    DATA
+    DATA,
+    GRAPHICS,
+    SOUND,
+    TEXT,
+    POINTER16,
+    POINTER24,
+    FILLER
 }

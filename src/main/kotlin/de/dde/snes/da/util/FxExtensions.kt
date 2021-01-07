@@ -6,6 +6,8 @@ import javafx.beans.property.Property
 import javafx.beans.property.ReadOnlyProperty
 import javafx.scene.control.TreeTableCell
 import javafx.scene.control.TreeTableColumn
+import javafx.scene.input.DragEvent
+import javafx.scene.input.MouseEvent
 import kotlin.reflect.KProperty
 
 operator fun <T> ReadOnlyProperty<T>.getValue(thisRef: Any?, property: KProperty<*>): T? = this.value

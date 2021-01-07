@@ -53,6 +53,10 @@
 }
 
 .tree-table-row-cell.unknown {
+    -fx-background-color: darkgrey;
+}
+
+.tree-table-row-cell.unknown:selected {
     -fx-background-color: grey;
 }
 

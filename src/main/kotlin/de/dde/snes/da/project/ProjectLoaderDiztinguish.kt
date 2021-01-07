@@ -64,6 +64,12 @@ class ProjectLoaderDiztinguish(
                 ROMByteType.INSTRUCTION -> 0x10
                 ROMByteType.OPERAND -> 0x11
                 ROMByteType.DATA -> 0x20
+                ROMByteType.FILLER -> 0x23
+                ROMByteType.TEXT -> 0x60
+                ROMByteType.GRAPHICS -> 0x21
+                ROMByteType.SOUND -> 0x22
+                ROMByteType.POINTER16 -> 0x31
+                ROMByteType.POINTER24 -> 0x41
             })
         }
 
@@ -168,17 +174,17 @@ class ProjectLoaderDiztinguish(
                 0x00 -> ROMByteType.UNKNOWN
                 0x10 -> ROMByteType.INSTRUCTION
                 0x11 -> ROMByteType.OPERAND
-                0x20 -> ROMByteType.DATA //Data8Bit
-                0x21 -> ROMByteType.DATA // Graphics
-                0x22 -> ROMByteType.DATA // Music
-                0x23 -> ROMByteType.DATA // Empty
+                0x20 -> ROMByteType.DATA // Data8Bit
+                0x21 -> ROMByteType.GRAPHICS // Graphics
+                0x22 -> ROMByteType.SOUND // Music
+                0x23 -> ROMByteType.FILLER // Empty
                 0x30 -> ROMByteType.DATA // Data16Bit
-                0x31 -> ROMByteType.DATA // Pointer16Bit
+                0x31 -> ROMByteType.POINTER16 // Pointer16Bit
                 0x40 -> ROMByteType.DATA // Data24Bit
-                0x41 -> ROMByteType.DATA // Pointer24Bit
+                0x41 -> ROMByteType.POINTER24 // Pointer24Bit
                 0x50 -> ROMByteType.DATA // Data32Bit
                 0x51 -> ROMByteType.DATA // Pointer32Bit
-                0x60 -> ROMByteType.DATA // Text
+                0x60 -> ROMByteType.TEXT // Text
                 else -> error("unknown byteType ${"%02X".format(b)}")
             }
         }

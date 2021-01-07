@@ -18,8 +18,10 @@ import javafx.fxml.Initializable
 import javafx.scene.Parent
 import javafx.scene.control.*
 import javafx.scene.control.cell.TextFieldTreeTableCell
+import javafx.scene.input.DragEvent
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyEvent
+import javafx.scene.input.MouseEvent
 import javafx.scene.text.Font
 import javafx.scene.text.TextAlignment
 import java.net.URL
@@ -44,6 +46,20 @@ class TableControl(
     lateinit var tblColIns: TreeTableColumn<ROMByte, Any>
     @FXML
     lateinit var tblColCom: TreeTableColumn<ROMByte, String>
+    @FXML
+    lateinit var tblColM: TreeTableColumn<ROMByte, Any>
+    @FXML
+    lateinit var tblColI: TreeTableColumn<ROMByte, Any>
+    @FXML
+    lateinit var tblColMode: TreeTableColumn<ROMByte, Any>
+    @FXML
+    lateinit var tblColPbr: TreeTableColumn<ROMByte, Any>
+    @FXML
+    lateinit var tblColDbr: TreeTableColumn<ROMByte, Any>
+    @FXML
+    lateinit var tblColDir: TreeTableColumn<ROMByte, Any>
+    @FXML
+    lateinit var tblColSta: TreeTableColumn<ROMByte, Any>
 
     @FXML
     lateinit var txtBank: TextField
@@ -92,6 +108,71 @@ class TableControl(
                 treeTableRow.item?.let { "%02X".format(it.b) } ?: ""
         }
 
+        tblColM.cellFactory = treeTableCell { _, empty ->
+            text = when {
+                empty -> ""
+                treeTableRow.item.state.memory -> "16"
+                else -> "8"
+            }
+        }
+        tblColI.cellFactory = treeTableCell { _, empty ->
+            text = when {
+                empty -> ""
+                treeTableRow.item.state.index -> "16"
+                else -> "8"
+            }
+        }
+
+        tblColMode.cellFactory = treeTableCell { _, empty ->
+            text = if (empty)
+                ""
+            else
+                treeTableRow.item.state.mode.name
+        }
+
+        tblColPbr.cellFactory = treeTableCell { _, empty ->
+            text = if (empty)
+                ""
+            else
+                "%02X".format(treeTableRow.item.state.pbr)
+        }
+
+        tblColDbr.cellFactory = treeTableCell { _, empty ->
+            text = if (empty)
+                ""
+            else
+                "%02X".format(treeTableRow.item.state.dbr)
+        }
+
+        tblColDir.cellFactory = treeTableCell { _, empty ->
+            text = if (empty)
+                ""
+            else
+                "%04X".format(treeTableRow.item.state.direct)
+        }
+
+        tblColSta.cellFactory = treeTableCell { _, empty ->
+            text = if (empty)
+                ""
+            else {
+                val s = StringBuilder()
+
+                with (treeTableRow.item.state) {
+                    s.append(if (emulation) 'E' else 'N').append('-')
+                    s.append(if (negative) 'N' else 'n')
+                    s.append(if (overflow) 'V' else 'v')
+                    s.append(if (memory) 'M' else 'm')
+                    s.append(if (index) 'X' else 'x')
+                    s.append(if (decimal) 'D' else 'd')
+                    s.append(if (irq) 'I' else 'i')
+                    s.append(if (zero) 'Z' else 'z')
+                    s.append(if (carry) 'C' else 'c')
+                }
+
+                s.toString()
+            }
+        }
+
         tblColIns.cellFactory = treeTableCell { _, empty ->
             text = if (empty || treeTableRow.item == null || controller.project == null)
                 ""
@@ -113,9 +194,28 @@ class TableControl(
             }
         }
 
+        var startIndex = 0
+
         tblRom.rowFactory = callback {
             object : TreeTableRow<ROMByte>() {
                 val typeListener = ChangeListener<ROMByteType> { _, o, _ -> typeChanged(o) }
+
+                init {
+                    setOnDragDetected {
+                        startFullDrag()
+                        startIndex = index
+                        treeTableView.selectionModel.clearAndSelect(startIndex)
+                    }
+
+                    setOnMouseDragEntered {
+                        treeTableView.selectionModel.clearSelection()
+                        if (index > startIndex)
+                            treeTableView.selectionModel.selectRange(startIndex, index + 1)
+                        else
+                            treeTableView.selectionModel.selectRange(index, startIndex + 1)
+
+                    }
+                }
 
                 override fun updateItem(item: ROMByte?, empty: Boolean) {
                     val old = this.item?.type
@@ -175,6 +275,10 @@ class TableControl(
 
         tblRom.root = TreeItem()
 
+        tblRom.treeColumn = tblColLbl
+
+        tblRom.selectionModel.selectionMode = SelectionMode.MULTIPLE
+
         tblRom.setColumnResizePolicy {
             if (it.column?.isResizable == false)
                 return@setColumnResizePolicy false
@@ -189,6 +293,9 @@ class TableControl(
 
             for (column in tblRom.columns) {
                 when {
+                    !column.isVisible -> {
+                        continue
+                    }
                     column == it.column -> {
                         column.prefWidth = column.width + it.delta
                         remWidth -= column.prefWidth

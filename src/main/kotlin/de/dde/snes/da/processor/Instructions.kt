@@ -145,7 +145,7 @@ data class Instruction(
         val addressMode: AddressMode
 ) {
     fun getOperandBytes(project: Project, byte: ROMByte): List<ROMByte> {
-        return when (val b = addressMode.neededBytes(byte.state.memory, byte.state.index)) {
+        return when (val b = addressMode.neededBytes(!byte.state.m16, !byte.state.x16)) {
             0 -> emptyList()
             else -> project.romBytes.subList(minOf(project.romBytes.size, byte.index + 1), minOf(project.romBytes.size, byte.index + 1 + b))
             /* TODO

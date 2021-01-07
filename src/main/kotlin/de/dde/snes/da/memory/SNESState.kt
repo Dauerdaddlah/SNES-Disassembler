@@ -19,7 +19,7 @@ class SNESState : ObservableValue<SNESState> {
             field = value
             fireEvent()
         }
-    var status: Int = 0
+    var status: Int = BIT_IRQ_DISABLE or BIT_INDEX or BIT_MEMORY or BIT_EMULATION
         set(value) {
             field = value
             fireEvent()
@@ -43,6 +43,9 @@ class SNESState : ObservableValue<SNESState> {
     var memory: Boolean by BIT_MEMORY
     var overflow: Boolean by BIT_OVERFLOW
     var negative: Boolean by BIT_NEGATIVE
+
+    val m16 get() = !emulation && memory
+    val x16 get() = !emulation && index
 
     private operator fun Int.getValue(thisRef: Any?, property: KProperty<*>): Boolean = status.isBitSet(this)
     private operator fun Int.setValue(thisRef: Any?, property: KProperty<*>, value: Boolean) {

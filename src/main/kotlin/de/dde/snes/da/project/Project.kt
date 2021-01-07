@@ -146,9 +146,21 @@ class Project(
     fun markByte(offset: Int, type: ROMByteType) {
         romBytes[offset].type = type
 
+        when (type) {
+            ROMByteType.INSTRUCTION -> {
+                val inst = instruction(romBytes[offset].b)
+                inst.getOperandBytes(this, romBytes[offset]).forEach { markByte(it.index, ROMByteType.OPERAND) }
+            }
+            ROMByteType.POINTER16 -> {
+                romBytes[offset + 1].type = type
+            }
+            ROMByteType.POINTER24 -> {
+                romBytes[offset + 1].type = type
+                romBytes[offset + 2].type = type
+            }
+        }
         if (type == ROMByteType.INSTRUCTION) {
-            val inst = instruction(romBytes[offset].b)
-            inst.getOperandBytes(this, romBytes[offset]).forEach { markByte(it.index, ROMByteType.OPERAND) }
+
         }
     }
 }
