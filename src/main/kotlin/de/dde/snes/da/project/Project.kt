@@ -17,7 +17,7 @@ class Project(
 
     var loader: ProjectLoader? = null
 
-    init {
+    fun markStart() {
         for (vector in listOf(
                 header.emulationVectors.reset to "Emulation_Reset",
                 header.emulationVectors.nmi to "Emulation_NMI",
@@ -51,7 +51,7 @@ class Project(
         markHeader()
     }
 
-    private fun markHeader() {
+    fun markHeader() {
         val headerStart = mappingMode.headerStart
 
         for (i in 0x10..0x23) {
@@ -139,8 +139,11 @@ class Project(
         romBytes[headerStart + 0x4E].comment = "Native IRQ-Vector (Low)"
         romBytes[headerStart + 0x4F].comment = "Native IRQ-Vector (High)"
 
-        for (i in (if (header.headerVersion == 1) headerStart + 0x10 else headerStart) until (headerStart + MappingMode.HEADER_SIZE))
+        for (i in (if (header.headerVersion == 1) headerStart + 0x10 else headerStart) until (headerStart + MappingMode.HEADER_SIZE - 0x20))
             romBytes[i].type = ROMByteType.DATA
+
+        for(i in headerStart + 0x30 until headerStart + 0x50)
+            romBytes[i].type = ROMByteType.POINTER16
     }
 
     fun markByte(offset: Int, type: ROMByteType) {

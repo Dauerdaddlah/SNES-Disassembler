@@ -124,6 +124,8 @@ class Controller(
         if (d.show()) {
             val project = Project(romFile, d.mappingMode)
 
+            project.markStart()
+
             this.project = project
         }
     }

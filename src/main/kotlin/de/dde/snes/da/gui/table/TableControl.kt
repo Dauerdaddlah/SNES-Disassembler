@@ -1,14 +1,14 @@
 package de.dde.snes.da.gui.table
 
-import com.sun.javafx.tk.Toolkit
 import de.dde.snes.da.Disassembler
 import de.dde.snes.da.gui.Controller
 import de.dde.snes.da.memory.ROMByte
 import de.dde.snes.da.memory.ROMByteType
+import de.dde.snes.da.memory.SNESState
 import de.dde.snes.da.processor.instruction
+import de.dde.snes.da.translate
 import de.dde.snes.da.util.callback
 import de.dde.snes.da.util.treeTableCell
-import javafx.application.Platform
 import javafx.beans.value.ChangeListener
 import javafx.event.Event
 import javafx.event.EventHandler
@@ -17,15 +17,12 @@ import javafx.fxml.FXMLLoader
 import javafx.fxml.Initializable
 import javafx.scene.Parent
 import javafx.scene.control.*
-import javafx.scene.control.cell.TextFieldTreeTableCell
-import javafx.scene.input.DragEvent
 import javafx.scene.input.KeyCode
-import javafx.scene.input.KeyEvent
-import javafx.scene.input.MouseEvent
-import javafx.scene.text.Font
-import javafx.scene.text.TextAlignment
+import javafx.scene.input.KeyCodeCombination
+import javafx.scene.input.KeyCombination
 import java.net.URL
 import java.util.*
+import javax.swing.ActionMap
 
 class TableControl(
         val controller: Controller
@@ -33,44 +30,49 @@ class TableControl(
     val root: Parent
 
     @FXML
-    lateinit var tblRom: TreeTableView<ROMByte>
+    private lateinit var tblRom: TreeTableView<ROMByte>
     @FXML
-    lateinit var tblColLbl: TreeTableColumn<ROMByte, String>
+    private lateinit var tblColLbl: TreeTableColumn<ROMByte, String>
     @FXML
-    lateinit var tblColOff: TreeTableColumn<ROMByte, Int>
+    private lateinit var tblColOff: TreeTableColumn<ROMByte, Int>
     @FXML
-    lateinit var tblColAdd: TreeTableColumn<ROMByte, Number>
+    private lateinit var tblColAdd: TreeTableColumn<ROMByte, Number>
     @FXML
-    lateinit var tblColVal: TreeTableColumn<ROMByte, Any>
+    private lateinit var tblColVal: TreeTableColumn<ROMByte, Any>
     @FXML
-    lateinit var tblColIns: TreeTableColumn<ROMByte, Any>
+    private lateinit var tblColIns: TreeTableColumn<ROMByte, Any>
     @FXML
-    lateinit var tblColCom: TreeTableColumn<ROMByte, String>
+    private lateinit var tblColCom: TreeTableColumn<ROMByte, String>
     @FXML
-    lateinit var tblColM: TreeTableColumn<ROMByte, Any>
+    private lateinit var tblColM: TreeTableColumn<ROMByte, SNESState>
     @FXML
-    lateinit var tblColI: TreeTableColumn<ROMByte, Any>
+    private lateinit var tblColI: TreeTableColumn<ROMByte, SNESState>
     @FXML
-    lateinit var tblColMode: TreeTableColumn<ROMByte, Any>
+    private lateinit var tblColMode: TreeTableColumn<ROMByte, SNESState>
     @FXML
-    lateinit var tblColPbr: TreeTableColumn<ROMByte, Any>
+    private lateinit var tblColPbr: TreeTableColumn<ROMByte, SNESState>
     @FXML
-    lateinit var tblColDbr: TreeTableColumn<ROMByte, Any>
+    private lateinit var tblColDbr: TreeTableColumn<ROMByte, SNESState>
     @FXML
-    lateinit var tblColDir: TreeTableColumn<ROMByte, Any>
+    private lateinit var tblColDir: TreeTableColumn<ROMByte, SNESState>
     @FXML
-    lateinit var tblColSta: TreeTableColumn<ROMByte, Any>
+    private lateinit var tblColSta: TreeTableColumn<ROMByte, SNESState>
+    @FXML
+    private lateinit var tblColTyp: TreeTableColumn<ROMByte, ROMByteType>
 
     @FXML
-    lateinit var txtBank: TextField
+    private lateinit var txtBank: TextField
     @FXML
-    lateinit var txtPage: TextField
+    private lateinit var txtPage: TextField
 
-    var numBanks = 0
-    var curBank = -1
-    var numPages = 0
-    var curPage = -1
-    val treeItems = mutableListOf<TreeItem<ROMByte>>()
+    private var numBanks = 0
+    private var curBank = -1
+    private var numPages = 0
+    private var curPage = -1
+    private val treeItems = mutableListOf<TreeItem<ROMByte>>()
+
+    val actionMap = mutableMapOf<ActionId, Action>()
+    val inputMap = mutableMapOf<KeyCombination, ActionId>()
 
     init {
         val loader = FXMLLoader(javaClass.getResource("TableControl.fxml"))
@@ -78,6 +80,44 @@ class TableControl(
         loader.resources = Disassembler.resourceBundle
 
         root = loader.load()
+
+        ROMByteType.values().forEach { type ->
+            actionMap["$ACTION_MARK_PREFIX${type.name}"] = { forEachRow { this.type = type } }
+        }
+
+        actionMap[ACTION_SWITCH_M] = { forEachRow { state.memory = !state.memory } }
+        actionMap[ACTION_SWITCH_X] = { forEachRow { state.index = !state.index } }
+        actionMap[ACTION_SWITCH_MODE] = { forEachRow { state.emulation = !state.emulation } }
+
+        val ctx = ContextMenu()
+
+        val menuMark = Menu(translate("de.dde.snes.da.rom.mark"))
+        ROMByteType.values().forEach { type ->
+            menuMark.items.add(actionMenuItem("$ACTION_MARK_PREFIX${type.name}"))
+        }
+        ctx.items.add(menuMark)
+        ctx.items.add(actionMenuItem(ACTION_SWITCH_M))
+        ctx.items.add(actionMenuItem(ACTION_SWITCH_X))
+        ctx.items.add(actionMenuItem(ACTION_SWITCH_MODE))
+
+        tblRom.contextMenu = ctx
+
+        inputMap[KeyCodeCombination(KeyCode.M)] = ACTION_SWITCH_M
+        inputMap[KeyCodeCombination(KeyCode.X)] = ACTION_SWITCH_X
+
+        root.setOnKeyPressed {
+            inputMap.filter {
+                e -> e.key.match(it)
+            }.forEach {
+                e -> actionMap[e.value]?.invoke()
+            }
+        }
+    }
+
+    private fun actionMenuItem(action: String): MenuItem {
+        val item = MenuItem(translate("de.dde.snes.da.rom.$action"))
+        item.onAction = EventHandler { actionMap[action]?.invoke() }
+        return item
     }
 
     override fun initialize(location: URL, resources: ResourceBundle) {
@@ -108,21 +148,33 @@ class TableControl(
                 treeTableRow.item?.let { "%02X".format(it.b) } ?: ""
         }
 
+        tblColTyp.cellValueFactory = callback { it.value.value.typeProperty }
+        tblColTyp.cellFactory = treeTableCell { _, empty ->
+            text = if (empty)
+                ""
+            else
+                item?.name?.let { it[0] + it.substring(1).toLowerCase() }
+        }
+
+        tblColM.cellValueFactory = callback { it.value.value.state }
         tblColM.cellFactory = treeTableCell { _, empty ->
             text = when {
                 empty -> ""
-                treeTableRow.item.state.memory -> "16"
-                else -> "8"
-            }
-        }
-        tblColI.cellFactory = treeTableCell { _, empty ->
-            text = when {
-                empty -> ""
-                treeTableRow.item.state.index -> "16"
+                treeTableRow.item.state.m16 -> "16"
                 else -> "8"
             }
         }
 
+        tblColI.cellValueFactory = callback { it.value.value.state }
+        tblColI.cellFactory = treeTableCell { _, empty ->
+            text = when {
+                empty -> ""
+                treeTableRow.item.state.x16 -> "16"
+                else -> "8"
+            }
+        }
+
+        tblColMode.cellValueFactory = callback { it.value.value.state }
         tblColMode.cellFactory = treeTableCell { _, empty ->
             text = if (empty)
                 ""
@@ -130,6 +182,7 @@ class TableControl(
                 treeTableRow.item.state.mode.name
         }
 
+        tblColPbr.cellValueFactory = callback { it.value.value.state }
         tblColPbr.cellFactory = treeTableCell { _, empty ->
             text = if (empty)
                 ""
@@ -137,6 +190,7 @@ class TableControl(
                 "%02X".format(treeTableRow.item.state.pbr)
         }
 
+        tblColDbr.cellValueFactory = callback { it.value.value.state }
         tblColDbr.cellFactory = treeTableCell { _, empty ->
             text = if (empty)
                 ""
@@ -144,6 +198,7 @@ class TableControl(
                 "%02X".format(treeTableRow.item.state.dbr)
         }
 
+        tblColDir.cellValueFactory = callback { it.value.value.state }
         tblColDir.cellFactory = treeTableCell { _, empty ->
             text = if (empty)
                 ""
@@ -151,6 +206,7 @@ class TableControl(
                 "%04X".format(treeTableRow.item.state.direct)
         }
 
+        tblColSta.cellValueFactory = callback { it.value.value.state }
         tblColSta.cellFactory = treeTableCell { _, empty ->
             text = if (empty)
                 ""
@@ -213,7 +269,6 @@ class TableControl(
                             treeTableView.selectionModel.selectRange(startIndex, index + 1)
                         else
                             treeTableView.selectionModel.selectRange(index, startIndex + 1)
-
                     }
                 }
 
@@ -226,9 +281,7 @@ class TableControl(
 
                     super.updateItem(item, empty)
 
-                    if (item != null) {
-                        item.typeProperty.addListener(typeListener)
-                    }
+                    item?.typeProperty?.addListener(typeListener)
 
                     typeChanged(old)
                 }
@@ -333,46 +386,46 @@ class TableControl(
     }
 
     @FXML
-    fun doFirstBank() {
+    private fun doFirstBank() {
         setVisibleData(-1, curPage)
     }
 
     @FXML
-    fun doPrevBank() {
+    private fun doPrevBank() {
         setVisibleData(curBank - 1, curPage)
     }
 
     @FXML
-    fun doNextBank() {
+    private fun doNextBank() {
         setVisibleData(curBank + 1, curPage)
     }
 
     @FXML
-    fun doLastBank() {
+    private fun doLastBank() {
         setVisibleData(numBanks, curPage)
     }
 
     @FXML
-    fun doFirstPage() {
+    private fun doFirstPage() {
         setVisibleData(curBank, -1)
     }
 
     @FXML
-    fun doPrevPage() {
+    private fun doPrevPage() {
         setVisibleData(curBank, curPage - 1)
     }
 
     @FXML
-    fun doNextPage() {
+    private fun doNextPage() {
         setVisibleData(curBank, curPage + 1)
     }
 
     @FXML
-    fun doLastPage() {
+    private fun doLastPage() {
         setVisibleData(curBank, numPages)
     }
 
-    fun setVisibleData(bank: Int, page: Int, updateAlways: Boolean = false) {
+    private fun setVisibleData(bank: Int, page: Int, updateAlways: Boolean = false) {
         if (!updateAlways && curBank == bank && curPage == page)
             return
 
@@ -396,6 +449,13 @@ class TableControl(
             }
 
             tblRom.root.children.setAll(treeItems.subList(minOf(treeItems.size, romStart), minOf(treeItems.size, romEnd)))
+        }
+    }
+
+    private fun forEachRow(action: ROMByte.() -> Unit) {
+        val project = controller.project?: return
+        tblRom.selectionModel.selectedIndices.forEach {
+            project.romBytes[it].action()
         }
     }
 
@@ -499,4 +559,14 @@ class TableControl(
             }
         }
     }
+
+    companion object {
+        const val ACTION_MARK_PREFIX: ActionId = "markByte"
+        const val ACTION_SWITCH_M: ActionId = "switchM"
+        const val ACTION_SWITCH_X: ActionId = "switchX"
+        const val ACTION_SWITCH_MODE: ActionId = "switchMode"
+    }
 }
+
+typealias Action = () -> Unit
+typealias ActionId = String

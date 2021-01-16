@@ -10,5 +10,5 @@ enum class ROMByteType {
     TEXT,
     POINTER16,
     POINTER24,
-    FILLER
+    FILL
 }

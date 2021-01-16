@@ -55,7 +55,6 @@
 .tree-table-row-cell.unknown {
     -fx-background-color: darkgrey;
 }
-
 .tree-table-row-cell.unknown:selected {
     -fx-background-color: grey;
 }
@@ -64,7 +63,35 @@
     -fx-background-color: green
 }
 
-.tree-table-row-cell.operand .cell {
+.tree-table-row-cell.operand .cell,
+.tree-table-row-cell.operand:selected .cell {
+    -fx-text-fill: lightgrey
+}
+
+.tree-table-row-cell.graphics {
+    -fx-background-color: darkolivegreen;
+}
+
+.tree-table-row-cell.sound {
+    -fx-background-color: yellowgreen;
+}
+
+.tree-table-row-cell.text {
+    -fx-background-color: salmon;
+}
+
+.tree-table-row-cell.pointer16 {
+    -fx-background-color: violet;
+}
+
+.tree-table-row-cell.pointer24 {
+    -fx-background-color: fuchsia;
+}
+
+.tree-table-row-cell.fill {
+    -fx-background-color: grey;
+}
+.tree-table-row-cell.fill:selected .cell {
     -fx-text-fill: lightgrey
 }
 

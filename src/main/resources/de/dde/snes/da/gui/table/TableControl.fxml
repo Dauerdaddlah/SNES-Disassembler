@@ -18,7 +18,8 @@
           <TreeTableColumn fx:id="tblColOff" editable="false" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" resizable="false" sortable="false" styleClass="centercol" text="%de.dde.snes.da.rom.offset" />
             <TreeTableColumn fx:id="tblColAdd" editable="false" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" resizable="false" sortable="false" text="%de.dde.snes.da.rom.address" />
             <TreeTableColumn fx:id="tblColVal" editable="false" maxWidth="25.0" minWidth="25.0" prefWidth="25.0" resizable="false" sortable="false" styleClass="centercol" text="%de.dde.snes.da.rom.value" />
-            <TreeTableColumn fx:id="tblColIns" editable="false" prefWidth="75.0" resizable="false" sortable="false" text="%de.dde.snes.da.rom.instruction" />
+            <TreeTableColumn fx:id="tblColIns" editable="false" maxWidth="75.0" minWidth="75.0" prefWidth="75.0" resizable="false" sortable="false" text="%de.dde.snes.da.rom.instruction" />
+            <TreeTableColumn fx:id="tblColTyp" editable="false" maxWidth="75.0" minWidth="75.0" prefWidth="75.0" resizable="false" sortable="false" text="%de.dde.snes.da.rom.type" />
             <TreeTableColumn fx:id="tblColMode" editable="false" maxWidth="75.0" minWidth="75.0" prefWidth="75.0" resizable="false" styleClass="centercol" text="%de.dde.snes.da.rom.mode" visible="false" />
             <TreeTableColumn fx:id="tblColM" editable="false" maxWidth="25.0" minWidth="25.0" prefWidth="25.0" resizable="false" styleClass="centercol" text="%de.dde.snes.da.rom.m" />
             <TreeTableColumn fx:id="tblColI" editable="false" maxWidth="25.0" minWidth="25.0" prefWidth="25.0" resizable="false" styleClass="centercol" text="%de.dde.snes.da.rom.i" />

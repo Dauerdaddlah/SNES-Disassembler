@@ -1,7 +1,5 @@
 package de.dde.snes.da.processor
 
-import de.dde.snes.da.ProcessorMode
-
 val allOperations: List<Operation>
     get() = listOf(
             ADC,
