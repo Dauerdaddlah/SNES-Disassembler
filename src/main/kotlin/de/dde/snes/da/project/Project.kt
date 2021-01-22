@@ -3,9 +3,9 @@ package de.dde.snes.da.project
 import de.dde.snes.da.memory.ROMByte
 import de.dde.snes.da.memory.ROMByteType
 import de.dde.snes.da.memory.ROMJumpType
-import de.dde.snes.da.processor.instruction
 import de.dde.snes.da.memory.MappingMode
 import de.dde.snes.da.memory.ROMFile
+import de.dde.snes.da.processor.*
 
 class Project(
         val romFile: ROMFile,
@@ -162,8 +162,49 @@ class Project(
                 romBytes[offset + 2].type = type
             }
         }
-        if (type == ROMByteType.INSTRUCTION) {
+    }
 
+    fun stepOver(index: Int): Int = step(index, false)
+
+    fun stepInto(index: Int): Int = step(index, true)
+
+    private fun step(index: Int, into: Boolean): Int {
+        TODO()
+        val byte = romBytes[index]
+
+        markByte(index, ROMByteType.INSTRUCTION)
+
+        val inst = instruction(byte.b)
+
+        val call = inst.operation in setOf(JSR, JSL)
+        val jump = inst.operation in setOf(JMP, JML)
+        val branch = inst.operation in setOf(BCC, BCS, BEQ, BMI, BNE, BPL, BRA, BRL, BVC, BVS)
+        val branchAlways = inst.operation in setOf(JMP, JML, BRA, BRL)
+
+        byte.jumpType.remove(ROMJumpType.CALL)
+        byte.jumpType.remove(ROMJumpType.JUMP)
+        byte.jumpType.remove(ROMJumpType.BRANCH)
+        if (call) byte.jumpType.add(ROMJumpType.CALL)
+        else if (jump) byte.jumpType.add(ROMJumpType.JUMP)
+        else if (branch) byte.jumpType.add(ROMJumpType.BRANCH)
+
+        /*
+        val branchByte = if (branch ||  jump || call) {
+            inst.get
+        } else null
+
+        val nextByte = if (branchAlways) branchByte?: error("") else {
+            val i = index + inst.addressMode.neededBytes(byte.state.m16, byte.state.x16)
+            romBytes[index]
         }
+
+        return if (branchAlways || into) {
+            branchByte?.index?: -1
+        } else {
+            nextByte.index
+        }
+         */
+
+        return index + inst.addressMode.neededBytes(byte.state) + 1
     }
 }

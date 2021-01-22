@@ -88,6 +88,8 @@ class TableControl(
         actionMap[ACTION_SWITCH_M] = { forEachRow { state.memory = !state.memory } }
         actionMap[ACTION_SWITCH_X] = { forEachRow { state.index = !state.index } }
         actionMap[ACTION_SWITCH_MODE] = { forEachRow { state.emulation = !state.emulation } }
+        actionMap[ACTION_STEP] = { doStep() }
+        actionMap[ACTION_STEP_INTO] = { doStep(true) }
 
         val ctx = ContextMenu()
 
@@ -104,6 +106,7 @@ class TableControl(
 
         inputMap[KeyCodeCombination(KeyCode.M)] = ACTION_SWITCH_M
         inputMap[KeyCodeCombination(KeyCode.X)] = ACTION_SWITCH_X
+        inputMap[KeyCodeCombination(KeyCode.S)] = ACTION_STEP
 
         root.setOnKeyPressed {
             inputMap.filter {
@@ -317,7 +320,7 @@ class TableControl(
                 if (it.code.isLetterKey || it.code.isDigitKey) {
                     val focusedCellPosition = tblRom.focusModel.focusedCell
 
-                    if (focusedCellPosition.tableColumn.isEditable) {
+                    if (focusedCellPosition.tableColumn?.isEditable == true) {
                         startEditKey = it.text
                         tblRom.edit(focusedCellPosition.row, focusedCellPosition.tableColumn)
                         startEditKey = null
@@ -459,6 +462,21 @@ class TableControl(
         }
     }
 
+    fun doStep(into: Boolean = false) {
+        val project = controller.project?: return
+        val sel = tblRom.selectionModel.selectedIndex
+
+        if (sel == -1)
+            return
+
+        val newSel = if (into)
+            project.stepOver(sel)
+        else
+            project.stepInto(sel)
+
+        tblRom.selectionModel.clearAndSelect(newSel)
+    }
+
     private var startEditKey: String? = null
 
     private inner class EditCell<S> : TreeTableCell<S, String>() {
@@ -565,6 +583,8 @@ class TableControl(
         const val ACTION_SWITCH_M: ActionId = "switchM"
         const val ACTION_SWITCH_X: ActionId = "switchX"
         const val ACTION_SWITCH_MODE: ActionId = "switchMode"
+        const val ACTION_STEP: ActionId = "step"
+        const val ACTION_STEP_INTO: ActionId = "stepInto"
     }
 }
 
