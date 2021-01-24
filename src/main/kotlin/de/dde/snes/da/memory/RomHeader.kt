@@ -16,7 +16,7 @@ data class RomHeader(
         val checksum: Int,
         val coCpuType: Byte,
         val gameCode: String,
-        val flash: Byte,
+        val flash: SizeKB,
         val exRamSize: SizeKB,
         val specialVersion: Byte,
         val emulationVectors: Vectors,
@@ -32,7 +32,7 @@ data class Vectors(
         val irq: Int
 )
 
-inline class CountryCode(val code: Byte) {
+data class CountryCode(val code: Byte) {
     fun name() =
             when (code) {
                 0.toByte() -> "Japan"
@@ -70,9 +70,13 @@ inline class CountryCode(val code: Byte) {
                 13.toByte() -> VideoSystem.PAL
                 else -> VideoSystem.UNKNOWN
             }
+
+    override fun toString(): String {
+        return "Country(code=$code, ${name()} - ${system()})"
+    }
 }
 
-inline class Licensee(val code: Int) {
+data class Licensee(val code: Int) {
     fun name() =
             when (code) {
                 1 -> "Nintendo"
@@ -231,14 +235,27 @@ inline class Licensee(val code: Int) {
                 255 -> "Hudson Soft"
                 else -> "Unknown"
             }
+
+    override fun toString(): String {
+        return "Licensee(code=$code, ${name()})"
+    }
 }
 
-inline class SizeKB(val size: Byte) {
-    fun sizeKb() = if (size == 0.toByte()) 0 else (1 shl (size + 3));
+/**
+ * Size given in KB, so that $01 means 2KByte, $02 means 4 KByte and so on
+ */
+data class SizeKB(val size: Byte) {
+    fun sizeKByte() = if (size == 0.toByte()) 0 else (1 shl (size + 3));
 }
 
-inline class SizeMB(val size: Byte) {
-    fun sizeMb() = 1 shl (size - 7)
+/**
+ * Size given in KBit, so that $09 = 4MBit, $0A = 8MBit and so on
+ * The size ist not the definite-size, i. e. $0A means more than 4MBit ($09) and up to 8MBit inclusive
+ * Actually used are only sizes from $09 onward
+ */
+data class SizeMB(val size: Byte) {
+    fun sizeMBit() = 1 shl (size - 7)
+    fun sizeMByte() = sizeMBit() shr 3
 }
 
 // meaning of cType
@@ -258,7 +275,7 @@ inline class SizeMB(val size: Byte) {
 // *4 - ROM + Enhancement Chip + RAM
 // *5 - ROM + Enhancement Chip + RAM + SRAM
 // *6 - ROM + Enhancement Chip + SRAM
-inline class RomType(val romType: Byte) {
+data class RomType(val romType: Byte) {
     fun hasRAM() = when (romType.toInt() and 0xF) {
         1, 2, 4, 5 -> true
         else -> false
@@ -282,7 +299,9 @@ inline class RomType(val romType: Byte) {
     fun hasCustom() = romType.toInt() and 0xF0 == 0xF0
 
     override fun toString(): String {
-        val s = StringJoiner(" + ", "ROM", "")
+        val s = StringJoiner(" + ")
+
+        s.add("ROM")
 
         when {
             hasDsp() -> s.add("DSP")

@@ -20,7 +20,7 @@ sealed class MappingMode(
         }
 
         val gameCode = if (headerVersion < 3) "" else String(rom, headerStart + 0x02, 4)
-        val flash = if (headerVersion < 3) 0 else rom[headerStart + 0x0C]
+        val flash = SizeKB(if (headerVersion < 3) 0 else rom[headerStart + 0x0C])
         val exRamSize = SizeKB(if (headerVersion < 3) 0 else rom[headerStart + 0x0D])
         val specialVersion = if (headerVersion < 3) 0 else rom[headerStart + 0x0E]
 

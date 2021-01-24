@@ -42,13 +42,10 @@ class FileInfosView(
                 "smcHeader" to file.hasSmcHeader.toString())
 
         if (file.valid) {
-            table.items.addAll(
-                    LoROM.name to file.scores[LoROM].toString(),
-                    HiROM.name to file.scores[HiROM].toString(),
-                    ExLoROM.name to file.scores[ExLoROM].toString(),
-                    ExHiROM.name to file.scores[ExHiROM].toString(),
-
-                    "MappingMode" to file.mappingMode?.name.toString())
+            allMappingModes.forEach {  mode ->
+                table.items.add(mode.name to file.scores[mode].let { if (it == Integer.MIN_VALUE) "Impossible" else it.toString()})
+            }
+            table.items.add("MappingMode" to file.mappingMode?.name.toString())
 
             file.snesHeader?.let {
                 table.items.addAll(
@@ -56,8 +53,8 @@ class FileInfosView(
                         "ROM name" to it.romName,
                         "Raw Mapping Mode" to "${it.mappingMode} (0x${it.mappingMode.toString(16)})",
                         "cartridgeType" to it.cartridgeType.toString(),
-                        "romSize" to "${it.romSize} (${sizeToString(it.romSize.size)})",
-                        "ramSize" to "${it.ramSize} (${sizeToString(it.ramSize.size)})",
+                        "romSize" to "${it.romSize} (${it.romSize.sizeMByte()} MB)",
+                        "ramSize" to "${it.ramSize} (${it.ramSize.sizeKByte()} KB)",
                         "region" to "${it.region}",
                         "devId" to it.devId.toString(),
                         "ROM version" to it.romVersion.toString(),
@@ -72,8 +69,8 @@ class FileInfosView(
                 if(it.headerVersion > 2) {
                     table.items.addAll(
                             "gameCode" to it.gameCode,
-                            "flash memory" to "${it.flash} (${sizeToString(it.flash)})",
-                            "ex RAM size" to "${it.exRamSize} (${sizeToString(it.exRamSize.size)})",
+                            "flash memory" to "${it.flash} (${it.flash.sizeKByte()} KB)",
+                            "ex RAM size" to "${it.exRamSize} (${it.exRamSize.sizeKByte()} KB)",
                             "special version" to it.specialVersion.toString()
                     )
                 }
@@ -95,16 +92,6 @@ class FileInfosView(
                 )
             }
         }
-    }
-
-    fun sizeToString(size: Byte): String {
-        val s = 2.0.pow(size.toInt()).toInt()
-        return if (s < _1K) {
-            "$s kB"
-        } else {
-            "${s shr 10} MB"
-        }
-
     }
 
     override fun initialize(location: URL?, resources: ResourceBundle?) {
