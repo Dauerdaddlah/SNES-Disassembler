@@ -2,8 +2,10 @@ package de.dde.snes.da
 
 import de.dde.snes.da.gui.Gui
 import de.dde.snes.da.settings.PreferencesSettings
+import de.dde.snes.da.settings.PropertiesSettings
 import de.dde.snes.da.settings.Settings
 import javafx.application.Application
+import java.nio.file.Paths
 import java.util.*
 
 fun main(args: Array<String>) {
@@ -16,7 +18,7 @@ fun main(args: Array<String>) {
 }
 
 object Disassembler {
-    val settings: Settings = PreferencesSettings()
+    val settings: Settings = PropertiesSettings(Paths.get("config.properties"))
     val resourceBundle = ResourceBundle.getBundle("${javaClass.packageName}.trl.translations", settings.language)
 }
 
