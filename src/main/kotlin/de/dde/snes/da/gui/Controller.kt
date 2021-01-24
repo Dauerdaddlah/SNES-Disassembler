@@ -94,7 +94,9 @@ class Controller(
         if (file != null) {
             settings.lastFileOpened = file.toPath()
 
-            if (file.extension.equals("sfc", true)) {
+            if (file.extension.equals("sfc", true)
+                    || file.extension.equals("smc", true)
+            ) {
                 doOpenRom(file)
             } else {
                 doOpenProject(file)
@@ -141,7 +143,10 @@ class Controller(
 
         project.loader?.save(project)
 
-        project.loader?.path?.let { settings.addLastProject(it); refreshMnuLastOpened() }
+        project.loader?.path?.let {
+            settings.addLastProject(it)
+            refreshMnuLastOpened()
+        }
     }
 
     @FXML
