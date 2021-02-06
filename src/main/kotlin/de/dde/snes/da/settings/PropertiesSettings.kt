@@ -1,5 +1,7 @@
 package de.dde.snes.da.settings
 
+import de.dde.snes.da.gui.table.ActionId
+import javafx.scene.input.KeyCombination
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -8,7 +10,7 @@ import java.util.*
 
 class PropertiesSettings(
         val propertiesPath: Path,
-        val default: Properties? = null
+        default: Properties? = null
 ) : Settings {
     val p = Properties(default)
 
@@ -30,30 +32,62 @@ class PropertiesSettings(
             p.setProperty(PROP_NUMLASTPROJECTS, value.toString())
             save()
         }
-    val _lastProjects = mutableListOf<Path>()
-    override val lastProjects: List<Path>
+
+    private var _lastProjects = mutableListOf<Path>()
+    override var lastProjects: List<Path>
         get() = _lastProjects
+        set(value) {
+            var i = 0
+
+            while (i < value.size) {
+                p.setProperty("$PROP_LASTPROJECTS$i", value[i].toAbsolutePath().toString())
+                i++
+            }
+            while (i < _lastProjects.size) {
+                p.remove("$PROP_LASTPROJECTS$i")
+                i++
+            }
+
+            _lastProjects.clear()
+            _lastProjects.addAll(value)
+
+            save()
+        }
+
+    override var inputMap: Map<KeyCombination, ActionId>
+        get() {
+            val map = mutableMapOf<KeyCombination, ActionId>()
+
+            for (key in p.keys) {
+                if (key is String && key.startsWith(PROP_INPUT)) {
+                    val name = key.substring(PROP_INPUT.length + 1)
+                    val action: ActionId = p.getProperty(key)?: continue
+
+                    val key = KeyCombination.valueOf(name)
+
+                    map[key] = action
+                }
+            }
+
+            return map
+        }
+        set(value) {
+            for (key in p.keys.toMutableSet()) {
+                if (key is String && key.startsWith(PROP_INPUT)) {
+                    p.remove(key)
+                }
+            }
+
+            value.forEach { (key, value) ->
+                p["$PROP_INPUT.${key.name}"] = value
+            }
+
+            save()
+        }
+
 
     init {
         load()
-    }
-
-    override fun addLastProject(project: Path) {
-        val p = project.toAbsolutePath()
-
-        if (p in _lastProjects)
-            _lastProjects.remove(p)
-
-        // ensure the last one opened is always on top
-        _lastProjects.add(0, p)
-
-        val cnt = lastProjectsCount
-        while (_lastProjects.size > cnt)
-            _lastProjects.removeLast()
-
-        _lastProjects.forEachIndexed { index, path -> this.p.setProperty("$PROP_LASTPROJECTS.$index", path.toString()) }
-
-        save()
     }
 
     fun load() {
@@ -100,5 +134,6 @@ class PropertiesSettings(
         const val PROP_LASTOPENED = "$PROP_PREFIX.lastOpened"
         const val PROP_NUMLASTPROJECTS = "$PROP_PREFIX.numLastProjects"
         const val PROP_LASTPROJECTS = "$PROP_PREFIX.lastProjects"
+        const val PROP_INPUT = "$PROP_PREFIX.input"
     }
 }

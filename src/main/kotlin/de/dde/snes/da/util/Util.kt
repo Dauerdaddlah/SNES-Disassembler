@@ -1,5 +1,7 @@
 package de.dde.snes.da
 
+import javafx.scene.input.KeyCombination
+
 fun Int.asByte() = this and 0xFF
 fun Int.asShort() = this and 0xFFFF
 fun Int.asLong() = this and 0xFFFFFF

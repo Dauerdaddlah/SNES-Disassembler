@@ -25,7 +25,7 @@ import java.util.*
 import javax.swing.ActionMap
 
 class TableControl(
-        val controller: Controller
+        private val controller: Controller
 ) : Initializable {
     val root: Parent
 
@@ -104,9 +104,16 @@ class TableControl(
 
         tblRom.contextMenu = ctx
 
-        inputMap[KeyCodeCombination(KeyCode.M)] = ACTION_SWITCH_M
-        inputMap[KeyCodeCombination(KeyCode.X)] = ACTION_SWITCH_X
-        inputMap[KeyCodeCombination(KeyCode.S)] = ACTION_STEP
+        val im = Disassembler.settings.inputMap
+        inputMap.putAll(im)
+
+        if (inputMap.isEmpty()) {
+            inputMap[KeyCodeCombination(KeyCode.M)] = ACTION_SWITCH_M
+            inputMap[KeyCodeCombination(KeyCode.X)] = ACTION_SWITCH_X
+            inputMap[KeyCodeCombination(KeyCode.S)] = ACTION_STEP
+
+            Disassembler.settings.inputMap = inputMap
+        }
 
         root.setOnKeyPressed {
             inputMap.filter {
@@ -118,7 +125,7 @@ class TableControl(
     }
 
     private fun actionMenuItem(action: String): MenuItem {
-        val item = MenuItem(translate("de.dde.snes.da.rom.$action"))
+        val item = MenuItem(translate("de.dde.snes.da.action.$action"))
         item.onAction = EventHandler { actionMap[action]?.invoke() }
         return item
     }

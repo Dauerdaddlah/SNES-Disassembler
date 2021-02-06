@@ -5,11 +5,14 @@ import de.dde.snes.da.Disassembler.settings
 import de.dde.snes.da.project.Project
 import de.dde.snes.da.gui.hex.HexDataSourceByteArray
 import de.dde.snes.da.gui.hex.HexViewer
+import de.dde.snes.da.gui.settings.SettingsDialog
 import de.dde.snes.da.gui.table.TableControl
 import de.dde.snes.da.project.ProjectLoaderSda
 import de.dde.snes.da.memory.ROMFile
 import de.dde.snes.da.project.ProjectLoader
 import de.dde.snes.da.project.ProjectLoaderDiztinguish
+import de.dde.snes.da.settings.PreferencesSettings
+import de.dde.snes.da.settings.Settings
 import de.dde.snes.da.util.getValue
 import de.dde.snes.da.util.setValue
 import javafx.beans.binding.Bindings
@@ -24,6 +27,7 @@ import javafx.stage.FileChooser
 import javafx.stage.Stage
 import java.io.File
 import java.net.URL
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 import kotlin.system.exitProcess
@@ -144,7 +148,9 @@ class Controller(
         project.loader?.save(project)
 
         project.loader?.path?.let {
+
             settings.addLastProject(it)
+
             refreshMnuLastOpened()
         }
     }
@@ -178,5 +184,28 @@ class Controller(
 
             mnuOpenLast.items.add(item)
         }
+    }
+
+    @FXML
+    fun doOpenSettings() {
+        SettingsDialog(settings, table.actionMap.keys).show()
+    }
+
+    private fun Settings.addLastProject(path: Path) {
+        val lastProjects = this.lastProjects.toMutableList()
+
+        val p = path.toAbsolutePath()
+
+        if (p in lastProjects)
+            lastProjects.remove(p)
+
+        // ensure the last one opened is always on top
+        lastProjects.add(0, p)
+
+        val cnt = settings.lastProjectsCount
+        while (lastProjects.size > cnt)
+            lastProjects.removeLast()
+
+        this.lastProjects = lastProjects
     }
 }
