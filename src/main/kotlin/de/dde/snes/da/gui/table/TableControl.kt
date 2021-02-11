@@ -17,12 +17,13 @@ import javafx.fxml.FXMLLoader
 import javafx.fxml.Initializable
 import javafx.scene.Parent
 import javafx.scene.control.*
+import javafx.scene.control.skin.VirtualFlow
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCodeCombination
 import javafx.scene.input.KeyCombination
+import javafx.scene.layout.Region
 import java.net.URL
 import java.util.*
-import javax.swing.ActionMap
 
 class TableControl(
         private val controller: Controller
@@ -70,6 +71,7 @@ class TableControl(
     private var numPages = 0
     private var curPage = -1
     private val treeItems = mutableListOf<TreeItem<ROMByte>>()
+    private val rows = mutableSetOf<IndexedCell<*>>()
 
     val actionMap = mutableMapOf<ActionId, Action>()
     val inputMap = mutableMapOf<KeyCombination, ActionId>()
@@ -163,14 +165,14 @@ class TableControl(
             text = if (empty)
                 ""
             else
-                item?.name?.let { it[0] + it.substring(1).toLowerCase() }
+                item.name.let { it[0] + it.substring(1).toLowerCase() }
         }
 
         tblColM.cellValueFactory = callback { it.value.value.state }
         tblColM.cellFactory = treeTableCell { _, empty ->
             text = when {
                 empty -> ""
-                treeTableRow.item.state.m16 -> "16"
+                treeTableRow.item?.state?.m16 == true -> "16"
                 else -> "8"
             }
         }
@@ -179,7 +181,7 @@ class TableControl(
         tblColI.cellFactory = treeTableCell { _, empty ->
             text = when {
                 empty -> ""
-                treeTableRow.item.state.x16 -> "16"
+                treeTableRow.item?.state?.x16 == true -> "16"
                 else -> "8"
             }
         }
@@ -189,7 +191,7 @@ class TableControl(
             text = if (empty)
                 ""
             else
-                treeTableRow.item.state.mode.name
+                treeTableRow.item?.state?.mode?.name ?: ""
         }
 
         tblColPbr.cellValueFactory = callback { it.value.value.state }
@@ -197,7 +199,7 @@ class TableControl(
             text = if (empty)
                 ""
             else
-                "%02X".format(treeTableRow.item.state.pbr)
+                "%02X".format(treeTableRow.item?.state?.pbr ?: 0)
         }
 
         tblColDbr.cellValueFactory = callback { it.value.value.state }
@@ -205,7 +207,7 @@ class TableControl(
             text = if (empty)
                 ""
             else
-                "%02X".format(treeTableRow.item.state.dbr)
+                "%02X".format(treeTableRow.item?.state?.dbr ?: 0)
         }
 
         tblColDir.cellValueFactory = callback { it.value.value.state }
@@ -213,12 +215,12 @@ class TableControl(
             text = if (empty)
                 ""
             else
-                "%04X".format(treeTableRow.item.state.direct)
+                "%04X".format(treeTableRow.item?.state?.direct ?: 0)
         }
 
         tblColSta.cellValueFactory = callback { it.value.value.state }
         tblColSta.cellFactory = treeTableCell { _, empty ->
-            text = if (empty)
+            text = if (empty || treeTableRow.item == null)
                 ""
             else {
                 val s = StringBuilder()
@@ -267,6 +269,7 @@ class TableControl(
                 val typeListener = ChangeListener<ROMByteType> { _, o, _ -> typeChanged(o) }
 
                 init {
+                    rows.add(this)
                     setOnDragDetected {
                         startFullDrag()
                         startIndex = index
@@ -469,7 +472,7 @@ class TableControl(
         }
     }
 
-    fun doStep(into: Boolean = false) {
+    private fun doStep(into: Boolean = false) {
         val project = controller.project?: return
         val sel = tblRom.selectionModel.selectedIndex
 
@@ -482,6 +485,31 @@ class TableControl(
             project.stepInto(sel)
 
         tblRom.selectionModel.clearAndSelect(newSel)
+
+        // TODO try to replace with a less virtual-flow-implementation-dependant solution
+        val flow = tblRom.lookup(".virtual-flow") as VirtualFlow<*>
+        val clipView = flow.lookup(".clipped-container") as Region
+
+        val startCell = flow.firstVisibleCell
+        val endCell = flow.lastVisibleCell
+
+        startCell ?: return
+        endCell ?: return
+
+        // the index of the last fully visible cell
+        val endIndex = if (endCell.layoutBounds.maxY > clipView.height) endCell.index - 1 else endCell.index
+
+        val cellHeight = startCell.layoutBounds.height
+
+        val viewport = clipView.height
+
+        if (startCell.index != -1 && newSel < startCell.index)
+            flow.scrollTo(newSel)
+        else if (endIndex > -1 && newSel >= endIndex) {
+            val viewportCells = viewport / cellHeight
+
+            flow.position = (newSel - viewportCells + 1) / project.romBytes.size
+        }
     }
 
     private var startEditKey: String? = null
