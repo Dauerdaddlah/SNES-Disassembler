@@ -14,8 +14,12 @@
     <JAVADOC />
     <SOURCES>
       <root url="jar://$MAVEN_REPOSITORY$/org/openjfx/javafx-fxml/14/javafx-fxml-14-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/openjfx/javafx-fxml/14/javafx-fxml-14-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/openjfx/javafx-controls/14/javafx-controls-14-sources.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/org/openjfx/javafx-controls/14/javafx-controls-14-sources.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/14/javafx-graphics-14-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/14/javafx-graphics-14-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/openjfx/javafx-base/14/javafx-base-14-sources.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/org/openjfx/javafx-base/14/javafx-base-14-sources.jar!/" />
     </SOURCES>
   </library>

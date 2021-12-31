@@ -169,7 +169,7 @@ class Project(
     fun stepInto(index: Int): Int = step(index, true)
 
     private fun step(index: Int, into: Boolean): Int {
-        TODO()
+//        TODO()
         val byte = romBytes[index]
 
         markByte(index, ROMByteType.INSTRUCTION)
