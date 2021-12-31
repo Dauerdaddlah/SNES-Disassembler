@@ -17,12 +17,15 @@ import javafx.fxml.FXMLLoader
 import javafx.fxml.Initializable
 import javafx.scene.Parent
 import javafx.scene.control.*
+import javafx.scene.control.skin.TableViewSkin
+import javafx.scene.control.skin.TreeTableViewSkin
+import javafx.scene.control.skin.VirtualFlow
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCodeCombination
 import javafx.scene.input.KeyCombination
 import java.net.URL
 import java.util.*
-import javax.swing.ActionMap
+
 
 class TableControl(
         val controller: Controller
@@ -163,7 +166,7 @@ class TableControl(
         tblColM.cellFactory = treeTableCell { _, empty ->
             text = when {
                 empty -> ""
-                treeTableRow.item.state.m16 -> "16"
+                treeTableRow.item?.state?.m16 == true -> "16"
                 else -> "8"
             }
         }
@@ -172,7 +175,7 @@ class TableControl(
         tblColI.cellFactory = treeTableCell { _, empty ->
             text = when {
                 empty -> ""
-                treeTableRow.item.state.x16 -> "16"
+                treeTableRow.item?.state?.x16 == true -> "16"
                 else -> "8"
             }
         }
@@ -190,7 +193,7 @@ class TableControl(
             text = if (empty)
                 ""
             else
-                "%02X".format(treeTableRow.item.state.pbr)
+                "%02X".format(treeTableRow.item?.state?.pbr ?: 0)
         }
 
         tblColDbr.cellValueFactory = callback { it.value.value.state }
@@ -198,7 +201,7 @@ class TableControl(
             text = if (empty)
                 ""
             else
-                "%02X".format(treeTableRow.item.state.dbr)
+                "%02X".format(treeTableRow.item?.state?.dbr ?: 0)
         }
 
         tblColDir.cellValueFactory = callback { it.value.value.state }
@@ -206,7 +209,7 @@ class TableControl(
             text = if (empty)
                 ""
             else
-                "%04X".format(treeTableRow.item.state.direct)
+                "%04X".format(treeTableRow.item?.state?.direct ?: 0)
         }
 
         tblColSta.cellValueFactory = callback { it.value.value.state }
@@ -216,7 +219,7 @@ class TableControl(
             else {
                 val s = StringBuilder()
 
-                with (treeTableRow.item.state) {
+                with (treeTableRow.item?.state ?: SNESState()) {
                     s.append(if (emulation) 'E' else 'N').append('-')
                     s.append(if (negative) 'N' else 'n')
                     s.append(if (overflow) 'V' else 'v')
@@ -384,6 +387,25 @@ class TableControl(
             try {
                 setVisibleData(curBank, txtPage.text.toInt(16))
             } catch(e: NumberFormatException) {
+            }
+        }
+
+        tblRom.selectionModel.selectedIndexProperty().addListener { _, _, i ->
+            val ts = tblRom.skin
+            if (ts is SkinBase<*>) {
+                val vf = ts.children.firstOrNull { it is VirtualFlow<*> }
+                if (vf is VirtualFlow<*>) {
+                    val last: Int = vf.lastVisibleCell.index
+                    if (i.toInt() <= last) {
+                        vf.scrollTo(i.toInt())
+                    } else {
+                        val cellHeight = vf.lastVisibleCell.height
+                        // first use scrollTo(last) so that the last cell is fully visible,
+                        // then scroll down the needed amount of cells
+                        vf.scrollTo(last)
+                        vf.scrollPixels((i.toInt() - last) * cellHeight)
+                    }
+                }
             }
         }
     }
