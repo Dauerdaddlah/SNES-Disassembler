@@ -1,5 +1,7 @@
 package de.dde.snes.da.settings
 
+import de.dde.snes.da.gui.table.ActionId
+import javafx.scene.input.KeyCombination
 import java.nio.file.Path
 import java.util.*
 
@@ -9,7 +11,7 @@ interface Settings {
     var lastFileOpened: Path?
 
     var lastProjectsCount: Int
-    val lastProjects: List<Path>
+    var lastProjects: List<Path>
 
-    fun addLastProject(project: Path)
+    var inputMap: Map<KeyCombination, ActionId>
 }

@@ -1,6 +1,8 @@
 package de.dde.snes.da.settings
 
 import de.dde.snes.da.Disassembler
+import de.dde.snes.da.gui.table.ActionId
+import javafx.scene.input.KeyCombination
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
@@ -20,40 +22,48 @@ class PreferencesSettings : Settings {
     override var lastProjectsCount: Int
         get() = root.getInt(LASTPROJECTSCOUNT, 10)
         set(value) { if (value in 1..20) root.putInt(LASTPROJECTSCOUNT, value) }
-    val _lastProjects = mutableListOf<Path>()
-    override val lastProjects: List<Path>
-        get() = _lastProjects
 
-    init {
-        for (i in 0..lastProjectsCount) {
-            val s = root.get("$LASTPROJECT$i", null)
+    override var lastProjects: List<Path>
+        get() = mutableListOf<Path>().also {
+            var i = 0
+            while (true) {
+                val s = root.get("$LASTPROJECT$i", null)
 
-            s?: break
+                s?: break
 
-            _lastProjects.add(Paths.get(s))
+                it.add(Paths.get(s))
+                i++
+            }
         }
-    }
+        set(value) { value.forEachIndexed { index, path -> root.put("$LASTPROJECT$index", path.toString()) } }
 
-    override fun addLastProject(project: Path) {
-        val p = project.toAbsolutePath()
+    override var inputMap: Map<KeyCombination, ActionId>
+        get() {
+            val input = root.node(NODE_INPUT)
 
-        if (p in _lastProjects)
-            _lastProjects.remove(p)
+            val ret = mutableMapOf<KeyCombination, ActionId>()
 
-        // ensure the last one opened is always on top
-        _lastProjects.add(0, p)
+            for (key in input.keys()) {
+                val action: ActionId? = input.get(key, null)
 
-        val cnt = lastProjectsCount
-        while (_lastProjects.size > cnt)
-            _lastProjects.removeLast()
+                action?: continue
 
-        _lastProjects.forEachIndexed { index, path -> root.put("$LASTPROJECT$index", path.toString()) }
-    }
+                TODO("parse key combination")
+            }
+
+            return ret
+        }
+        set(value) {
+            val input = root.node(NODE_INPUT)
+            input.clear()
+            value.forEach { (key, value) -> input.put(key.name, value) }
+        }
 
     companion object {
         private const val LASTFILEOPENED = "lastFileOpened"
         private const val LASTPROJECTSCOUNT = "LastProjectsCount"
         private const val LASTPROJECT = "LastProject"
         private const val LANGUAGE = "Language"
+        private const val NODE_INPUT = "inputs"
     }
 }

@@ -21,6 +21,7 @@
             <items>
               <MenuItem mnemonicParsing="false" onAction="#doOpen" text="%de.dde.snes.da.mnu.file.open" />
                   <Menu fx:id="mnuOpenLast" mnemonicParsing="false" text="%de.dde.snes.da.mnu.file.openlast" />
+                  <MenuItem mnemonicParsing="false" onAction="#doOpenSettings" text="%de.dde.snes.da.mnu.file.settings" />
                   <MenuItem fx:id="mnuItemSave" mnemonicParsing="false" onAction="#doSave" text="%de.dde.snes.da.mnu.file.save" />
                   <MenuItem fx:id="mnuItemSaveAs" mnemonicParsing="false" onAction="#doSaveAs" text="%de.dde.snes.da.mnu.file.saveas" />
                   <MenuItem mnemonicParsing="false" onAction="#doClose" text="%de.dde.snes.da.mnu.file.close" />

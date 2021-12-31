@@ -17,18 +17,14 @@ import javafx.fxml.FXMLLoader
 import javafx.fxml.Initializable
 import javafx.scene.Parent
 import javafx.scene.control.*
-import javafx.scene.control.skin.TableViewSkin
-import javafx.scene.control.skin.TreeTableViewSkin
-import javafx.scene.control.skin.VirtualFlow
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCodeCombination
 import javafx.scene.input.KeyCombination
 import java.net.URL
 import java.util.*
 
-
 class TableControl(
-        val controller: Controller
+        private val controller: Controller
 ) : Initializable {
     val root: Parent
 
@@ -107,9 +103,16 @@ class TableControl(
 
         tblRom.contextMenu = ctx
 
-        inputMap[KeyCodeCombination(KeyCode.M)] = ACTION_SWITCH_M
-        inputMap[KeyCodeCombination(KeyCode.X)] = ACTION_SWITCH_X
-        inputMap[KeyCodeCombination(KeyCode.S)] = ACTION_STEP
+        val im = Disassembler.settings.inputMap
+        inputMap.putAll(im)
+
+        if (inputMap.isEmpty()) {
+            inputMap[KeyCodeCombination(KeyCode.M)] = ACTION_SWITCH_M
+            inputMap[KeyCodeCombination(KeyCode.X)] = ACTION_SWITCH_X
+            inputMap[KeyCodeCombination(KeyCode.S)] = ACTION_STEP
+
+            Disassembler.settings.inputMap = inputMap
+        }
 
         root.setOnKeyPressed {
             inputMap.filter {
@@ -121,7 +124,7 @@ class TableControl(
     }
 
     private fun actionMenuItem(action: String): MenuItem {
-        val item = MenuItem(translate("de.dde.snes.da.rom.$action"))
+        val item = MenuItem(translate("de.dde.snes.da.action.$action"))
         item.onAction = EventHandler { actionMap[action]?.invoke() }
         return item
     }
@@ -159,7 +162,7 @@ class TableControl(
             text = if (empty)
                 ""
             else
-                item?.name?.let { it[0] + it.substring(1).toLowerCase() }
+                item.name.let { it[0] + it.substring(1).toLowerCase() }
         }
 
         tblColM.cellValueFactory = callback { it.value.value.state }
@@ -185,7 +188,7 @@ class TableControl(
             text = if (empty)
                 ""
             else
-                treeTableRow.item.state.mode.name
+                treeTableRow.item?.state?.mode?.name ?: ""
         }
 
         tblColPbr.cellValueFactory = callback { it.value.value.state }
@@ -214,12 +217,12 @@ class TableControl(
 
         tblColSta.cellValueFactory = callback { it.value.value.state }
         tblColSta.cellFactory = treeTableCell { _, empty ->
-            text = if (empty)
+            text = if (empty || treeTableRow.item == null)
                 ""
             else {
                 val s = StringBuilder()
 
-                with (treeTableRow.item?.state ?: SNESState()) {
+                with (treeTableRow.item.state) {
                     s.append(if (emulation) 'E' else 'N').append('-')
                     s.append(if (negative) 'N' else 'n')
                     s.append(if (overflow) 'V' else 'v')
@@ -484,7 +487,7 @@ class TableControl(
         }
     }
 
-    fun doStep(into: Boolean = false) {
+    private fun doStep(into: Boolean = false) {
         val project = controller.project?: return
         val sel = tblRom.selectionModel.selectedIndex
 

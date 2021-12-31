@@ -4,10 +4,15 @@ import javafx.beans.property.BooleanProperty
 import javafx.beans.property.DoubleProperty
 import javafx.beans.property.Property
 import javafx.beans.property.ReadOnlyProperty
+import javafx.scene.Node
+import javafx.scene.Parent
 import javafx.scene.control.TreeTableCell
 import javafx.scene.control.TreeTableColumn
 import javafx.scene.input.DragEvent
 import javafx.scene.input.MouseEvent
+import javafx.scene.layout.GridPane
+import javafx.scene.layout.Pane
+import javafx.scene.layout.VBox
 import kotlin.reflect.KProperty
 
 operator fun <T> ReadOnlyProperty<T>.getValue(thisRef: Any?, property: KProperty<*>): T? = this.value
@@ -31,3 +36,10 @@ fun <S, T> treeTableCell(f: TreeTableCell<S, T>.(T?, Boolean) -> Unit) = callbac
         }
     }
 }
+
+fun VBox(con: VBox.() -> Unit): VBox = VBox().also { it.con() }
+fun Pane.children(vararg children: Node) {
+    this.children.addAll(children)
+}
+
+fun GridPane(con: GridPane.() -> Unit): GridPane = GridPane().also { it.con() }
